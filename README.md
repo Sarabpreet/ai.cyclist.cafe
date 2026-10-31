@@ -1,5 +1,7 @@
 # ai.cyclist.cafe
 
+[![Guide checks](https://github.com/Sarabpreet/ai.cyclist.cafe/actions/workflows/checks.yml/badge.svg)](https://github.com/Sarabpreet/ai.cyclist.cafe/actions/workflows/checks.yml)
+
 Standalone public guide to the Cyclist Café MCP server, for customers, agents and developers. Intended hostname: **https://ai.cyclist.cafe**. Server endpoint: **https://api.cyclist.cafe/mcp**.
 
 This repository is independent of `pos_cc` and `api.cyclist.cafe`. It is a static documentation site: no backend, customer sign-in, API proxy, analytics, credentials, external fonts, runtime packages or `node_modules` are needed. pnpm is pinned, so future additions can use its shared content-addressed store. Do not copy another repository's dependencies into this one.
@@ -36,7 +38,7 @@ Both `dev` and `preview` build and serve `dist/` using Node's HTTP server. Re-ru
 
 - Live guide: https://ai.cyclist.cafe
 - Public source: https://github.com/Sarabpreet/ai.cyclist.cafe
-- Cloudflare project: `ai-cyclist-cafe`
+- Cloudflare project: `ai-cyclist-cafe` (`https://ai-cyclist-cafe.pages.dev`)
 - Host: Cloudflare Pages, connected to this repository's main branch.
 - Cloudflare Pages hosts the site; GitHub holds its open-source code and runs checks. GitHub Pages hosting is not required.
 
@@ -47,6 +49,8 @@ corepack pnpm@9.15.9 install --frozen-lockfile && corepack pnpm@9.15.9 test && c
 ```
 
 Use Node.js 22, `SKIP_DEPENDENCY_INSTALL=true` and repository root as the build root. The build has no secrets. Cloudflare's GitHub integration handles deployment credentials; do not add personal OAuth tokens or business API credentials to this repository. GitHub Actions also runs tests and builds for main-branch pushes and pull requests. Failed Cloudflare tests/builds keep the previous successful site live. Preview deployments are disabled to avoid publishing unreviewed contributions automatically.
+
+To update the site, merge a reviewed change into `main`. Cloudflare runs the tests and builds before publishing. To recover a failed content release, roll back to a previous successful deployment in Cloudflare Pages and revert the corresponding source change.
 
 Only this guide is published by this integration. It does not deploy or enable the MCP backend or POS frontend. The custom subdomain uses a CNAME in authoritative Netlify/NS1 DNS to the connected Cloudflare Pages project. Do not change the API/POS DNS records.
 
