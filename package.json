@@ -1,0 +1,23 @@
+{
+  "name": "ai.cyclist.cafe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cyclist Caf\u00e9 MCP connection guide for customers, agents and developers.",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "node scripts/serve.mjs --source",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sarabpreet/ai.cyclist.cafe.git"
+  },
+  "homepage": "https://ai.cyclist.cafe"
+}

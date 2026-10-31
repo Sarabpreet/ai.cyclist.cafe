@@ -1,0 +1,22 @@
+{
+  "name": "Cyclist Café",
+  "documentation": "https://ai.cyclist.cafe/",
+  "endpoint": "https://api.cyclist.cafe/mcp",
+  "transport": "streamable-http",
+  "authentication": {
+    "publicTools": "none",
+    "customerTools": "oauth2-authorization-code-pkce-s256",
+    "clientRegistration": "dynamic-client-registration",
+    "tokenEndpointAuthMethod": "none",
+    "resource": "https://api.cyclist.cafe/mcp",
+    "protectedResourceMetadata": "https://api.cyclist.cafe/.well-known/oauth-protected-resource/mcp",
+    "authorizationServerMetadata": "https://api.cyclist.cafe/.well-known/oauth-authorization-server",
+    "scopes": ["orders:quote", "orders:checkout", "orders:read", "events:read", "events:rsvp"]
+  },
+  "customerConfirmationRequired": true,
+  "orderFulfilment": ["takeaway"],
+  "orderPayment": "cafe-counter",
+  "capabilityReference": "https://ai.cyclist.cafe/tools.json",
+  "availability": "Requires hosted deployment and administrator enablement. This metadata is documentation, not a live health result.",
+  "checkedAt": "2026-11-01"
+}

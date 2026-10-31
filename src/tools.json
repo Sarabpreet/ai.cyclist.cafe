@@ -1,0 +1,14 @@
+[
+ {"name":"get_cafe_status","group":"menu","scope":null,"description":"Opening hours, timezone and current fulfilment availability.","effect":"Read only","example":{}},
+ {"name":"search_menu","group":"menu","scope":null,"description":"Find products and active combos; filter by query, category, vegetarian tag or fulfilment.","effect":"Read only","example":{"query":"coffee","fulfilment":"takeaway","availableOnly":true,"limit":10}},
+ {"name":"get_menu_item","group":"menu","scope":null,"description":"Exact item or combo details, options, price and takeaway eligibility.","effect":"Read only","example":{"id":"PRODUCT_ID_FROM_SEARCH","kind":"product","fulfilment":"takeaway"}},
+ {"name":"list_events","group":"events","scope":null,"description":"Published upcoming events, category/date filters and current RSVP availability.","effect":"Read only","example":{"limit":10}},
+ {"name":"get_event","group":"events","scope":null,"description":"A published event’s dates, location, status and schema.org Event data.","effect":"Read only","example":{"eventId":"EVENT_ID_FROM_LIST"}},
+ {"name":"quote_order","group":"orders","scope":"orders:quote","description":"Price exact menu items and options; create a private expiring quote.","effect":"Quote only · no order or stock hold","example":{"fulfilment":"takeaway","items":[{"id":"PRODUCT_ID_FROM_SEARCH","quantity":1,"kind":"product","options":[]}]}},
+ {"name":"prepare_checkout","group":"orders","scope":"orders:checkout","description":"Create or reuse the trusted customer confirmation link for a quote.","effect":"Confirmation link · no order yet","example":{"quoteId":"QUOTE_ID_FROM_QUOTE_ORDER"}},
+ {"name":"get_checkout_status","group":"orders","scope":"orders:read","description":"Read this connection’s checkout and any submitted order.","effect":"Read only","example":{"checkoutId":"CHECKOUT_ID_FROM_PREPARE_CHECKOUT"}},
+ {"name":"get_my_order","group":"orders","scope":"orders:read","description":"Track the customer’s own order from the last seven days.","effect":"Read only","example":{"orderId":"ORDER_ID_FROM_SUBMITTED_CHECKOUT"}},
+ {"name":"prepare_event_rsvp","group":"events","scope":"events:rsvp","description":"Prepare going, interested or cancellation for the registered customer.","effect":"Confirmation link · no seat held","example":{"eventId":"EVENT_ID_FROM_LIST","response":"going","requestId":"550e8400-e29b-41d4-a716-446655440000"}},
+ {"name":"get_event_rsvp_status","group":"events","scope":"events:read","description":"Read this connection’s RSVP confirmation request and current response.","effect":"Read only","example":{"intentId":"INTENT_ID_FROM_PREPARE_EVENT_RSVP"}},
+ {"name":"get_my_event_rsvps","group":"events","scope":"events:read","description":"Read only the connected customer’s own event reservations.","effect":"Read only","example":{"limit":10}}
+]

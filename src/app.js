@@ -1,0 +1,30 @@
+const status=document.querySelector('#copy-status');let statusTimer;
+/** Announce copy outcomes without changing the accessible name of the clicked control. */
+function announce(message){status.textContent=message;status.classList.add('visible');clearTimeout(statusTimer);statusTimer=setTimeout(()=>status.classList.remove('visible'),2600);}
+/** Write only the requested documentation text; report denied clipboard access honestly. */
+async function copy(text){try{await navigator.clipboard.writeText(text);announce('Copied. Ready for your next conversation.');}catch{announce('Copy unavailable. Select the text and copy it manually.');}}
+for(const button of document.querySelectorAll('[data-copy]'))button.addEventListener('click',()=>copy(button.dataset.copy));
+for(const button of document.querySelectorAll('.copy-code'))button.addEventListener('click',()=>copy(button.closest('.code-block').querySelector('pre code').textContent));
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+/** Activate one assistant guide panel, preserving keyboard and ARIA tab semantics. */
+function activateTab(tab){for(const item of tabs){const active=item===tab;item.setAttribute('aria-selected',String(active));item.tabIndex=active?0:-1;document.getElementById(item.getAttribute('aria-controls')).hidden=!active;}}
+for(const tab of tabs){tab.addEventListener('click',()=>activateTab(tab));tab.addEventListener('keydown',event=>{const keys=['ArrowLeft','ArrowRight','Home','End'];if(!keys.includes(event.key))return;event.preventDefault();const current=tabs.indexOf(tab),index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(current+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;activateTab(tabs[index]);tabs[index].focus();});}
+const imageDialog=document.querySelector('#image-dialog'),expandedImage=document.querySelector('#expanded-image');
+for(const button of document.querySelectorAll('[data-image]'))button.addEventListener('click',()=>{expandedImage.src=button.dataset.image;expandedImage.alt=button.querySelector('img').alt;document.querySelector('#image-title').textContent=button.dataset.caption;imageDialog.showModal();});
+document.querySelector('#close-image').addEventListener('click',()=>imageDialog.close());
+imageDialog.addEventListener('close',()=>expandedImage.removeAttribute('src'));
+const searchDialog=document.querySelector('#search-dialog'),searchInput=document.querySelector('#guide-search'),searchResults=document.querySelector('#search-results');
+const sections=[...document.querySelectorAll('.doc-section')].map(section=>({id:section.id,title:section.querySelector('h2').innerText.replace(/\s+/g,' ').trim(),search:(section.dataset.searchTitle+' '+section.textContent).toLowerCase()}));
+/** Render bounded section matches as safe text nodes, never as query-derived HTML. */
+function search(){const query=searchInput.value.trim().toLowerCase(),matches=sections.filter(section=>!query||query.split(/\s+/).every(word=>section.search.includes(word)));searchResults.replaceChildren();if(!matches.length){const p=document.createElement('p');p.textContent='No matching section. Try “events”, “connect” or “permissions”.';searchResults.append(p);return;}for(const section of matches.slice(0,12)){const a=document.createElement('a'),arrow=document.createElement('span');a.href='#'+section.id;a.textContent=section.title;arrow.textContent='↗';a.append(arrow);a.addEventListener('click',()=>searchDialog.close());searchResults.append(a);}}
+/** Open the guide search and focus its input after the dialog becomes modal. */
+function openSearch(){if(searchDialog.open)return;if(imageDialog.open)imageDialog.close();searchDialog.showModal();search();searchInput.focus();}
+document.querySelector('#open-search').addEventListener('click',openSearch);document.querySelector('#close-search').addEventListener('click',()=>searchDialog.close());searchInput.addEventListener('input',search);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(imageDialog.open)imageDialog.close();else if(searchDialog.open)searchDialog.close();return;}if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){event.preventDefault();openSearch();}});
+for(const dialog of [searchDialog,imageDialog])dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();});
+for(const button of document.querySelectorAll('[data-tool-filter]'))button.addEventListener('click',()=>{for(const item of document.querySelectorAll('[data-tool-filter]'))item.setAttribute('aria-pressed',String(item===button));for(const row of document.querySelectorAll('[data-tool-group]'))row.hidden=button.dataset.toolFilter!=='all'&&row.dataset.toolGroup!==button.dataset.toolFilter;});
+const links=[...document.querySelectorAll('.sidebar nav a')];
+if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){for(const link of links){if(link.hash==='#'+entry.target.id)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}}},{rootMargin:'-15% 0px -65% 0px',threshold:0});for(const section of document.querySelectorAll('.doc-section'))observer.observe(section);}
+/** Load local static examples without contacting the API or reading customer credentials. */
+async function loadExamples(){try{const response=await fetch('/tools.json');if(!response.ok)throw Error('reference');const tools=await response.json(),select=document.querySelector('#tool-example'),code=document.querySelector('#tool-example-code');const render=()=>{const tool=tools.find(item=>item.name===select.value);if(tool)code.textContent=JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:tool.name,arguments:tool.example}},null,2);};select.addEventListener('change',render);render();}catch{announce('The example reference could not load. Refresh to retry.');}}
+void loadExamples();
