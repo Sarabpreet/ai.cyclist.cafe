@@ -24,7 +24,7 @@ test('All internal anchors and declared IDs are valid and unique',()=>{
 });
 test('Every local link, screenshot and script resolves to the standalone output',async()=>{
  const urls=[...html.matchAll(/(?:href|src|data-image)="(\/[^"#?]*)"/g)].map(match=>match[1]);
- for(const url of urls){const file=path.join(root,'dist',url);assert((await stat(file)).isFile(),'Missing local asset '+url);}
+ for(const url of urls){let file=path.join(root,'dist',url);if((await stat(file)).isDirectory())file=path.join(file,'index.html');assert((await stat(file)).isFile(),'Missing local asset '+url);}
  const screenshots=[...html.matchAll(/<img[^>]+src="(\/screenshots\/[^"]+)"[^>]+alt="([^"]+)"/g)];assert(screenshots.length>=6);
  for(const [,url,alt]of screenshots){assert(alt.length>35);const bytes=await readFile(path.join(root,'dist',url));assert(bytes.subarray(1,4).toString()==='PNG','Expected real PNG '+url);}
 });
@@ -56,4 +56,30 @@ test('SEO metadata and structured data consistently identify the public guide',a
  const {createHash}=await import('node:crypto'),hash=createHash('sha256').update(json).digest('base64'),headers=await readFile(path.join(root,'dist/_headers'),'utf8');assert(headers.includes(`script-src 'self' 'sha256-${hash}'`));assert(!headers.includes("'unsafe-inline'"));
  const social=await readFile(path.join(root,'dist/social/mcp-server-cyclist-cafe.jpg'));assert.equal(social.subarray(0,3).toString('hex'),'ffd8ff');assert(html.includes('name="twitter:card" content="summary_large_image"'));
  const robots=await readFile(path.join(root,'dist/robots.txt'),'utf8'),sitemap=await readFile(path.join(root,'dist/sitemap.xml'),'utf8');assert(robots.includes('Sitemap: https://ai.cyclist.cafe/sitemap.xml'));assert(sitemap.includes('<loc>https://ai.cyclist.cafe/</loc>'));
+});
+
+
+test('Presentation has complete content, notes, local assets and safe controls',async()=>{
+ const ppt=await readFile(path.join(root,'dist/ppt/index.html'),'utf8');
+ const slides=[...ppt.matchAll(/<section id="([^"]+)" data-chapter="([^"]+)"/g)];
+ assert.equal(slides.length,19);assert.equal(new Set(slides.map(s=>s[1])).size,19);
+ assert.equal((ppt.match(/<aside class="notes">/g)||[]).length,19);
+ for(const id of ['why','when','connect','takeaway','events','control','boundaries','retry','availability'])assert(slides.some(s=>s[1]===id));
+ for(const [,url]of ppt.matchAll(/(?:href|src)="(\/[^"#?]*)/g)){let file=path.join(root,'dist',url);if((await stat(file)).isDirectory())file=path.join(file,'index.html');assert((await stat(file)).isFile(),url);}
+ const headers=await readFile(path.join(root,'dist/_headers'),'utf8');assert(headers.includes("style-src 'self' 'sha256-"));assert(!headers.includes("'unsafe-inline'"));
+ assert(ppt.includes('https://api.cyclist.cafe/mcp'));assert(ppt.includes('https://ai.cyclist.cafe/ppt/'));assert(ppt.includes('fictional data'));assert(ppt.includes('Publishing this presentation does not enable MCP.'));
+ assert(!/<iframe|<script[^>]*src="https?:/.test(ppt));assert(!/ style=| onclick=/.test(ppt));
+ const js=await readFile(path.join(root,'dist/ppt/presentation.js'),'utf8');assert(!/\bfetch\(|XMLHttpRequest|localStorage|document\.cookie/.test(js));
+ execFileSync(process.execPath,['--check','public/ppt/presentation.js'],{cwd:root});
+ assert((await readFile(path.join(root,'dist/ppt/vendor/LICENSE'),'utf8')).includes('Permission is hereby granted'));
+ assert((await readFile(path.join(root,'dist/sitemap.xml'),'utf8')).includes('<loc>https://ai.cyclist.cafe/ppt/</loc>'));
+});
+
+test('Static preview resolves /ppt with and without a trailing slash and rejects missing files',async()=>{
+ const {resolveStaticFile}=await import('../scripts/static-file.mjs');
+ const dist=path.join(root,'dist');
+ for(const url of ['/ppt','/ppt/','/ppt/index.html'])assert.equal(await resolveStaticFile(dist,url),path.join(dist,'ppt/index.html'));
+ assert.equal(await resolveStaticFile(dist,'/'),path.join(dist,'index.html'));
+ await assert.rejects(resolveStaticFile(dist,'/ppt/missing.js'));
+ await assert.rejects(resolveStaticFile(dist,'/../package.json'));
 });

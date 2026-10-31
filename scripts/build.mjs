@@ -12,8 +12,19 @@ const html=await readFile(path.join(out,'index.html'),'utf8');
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rows=tools.map(tool=>`<tr data-tool-group="${escape(tool.group)}"><th scope="row"><code>${escape(tool.name)}</code><span>${escape(tool.description)}</span></th><td>${tool.scope?`<code>${escape(tool.scope)}</code>`:'Public'}</td><td>${escape(tool.effect)}</td></tr>`).join('\n');
 await writeFile(path.join(out,'index.html'),html.replace('<!-- TOOL_ROWS -->',rows));
-console.log(`Built ${tools.length} documented tools into dist/. Zero runtime dependencies.`);
+console.log(`Built ${tools.length} documented tools into dist/. No installed runtime packages.`);
 
 // Hash only the static structured data; keep executable inline scripts blocked.
 const structuredData=html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
 if(structuredData){const hash=createHash('sha256').update(structuredData).digest('base64');const file=path.join(out,'_headers');const headers=await readFile(file,'utf8');await writeFile(file,headers.replace("script-src 'self'",`script-src 'self' 'sha256-${hash}'`));}
+
+// Reveal.js 6.0.2 print styles for the fixed 1280×720 deck (margin 0.035).
+// Permit these exact blocks, never unsafe-inline or arbitrary executable scripts.
+const printStyles=['@page{size:1324px 745px; margin: 0px;}','.reveal section>img, .reveal section>video, .reveal section>iframe{max-width: 1280px; max-height:720px}'];
+const styleHashes=printStyles.map(css=>`'sha256-${createHash('sha256').update(css).digest('base64')}'`).join(' ');
+const headersFile=path.join(out,'_headers');
+await writeFile(headersFile,(await readFile(headersFile,'utf8')).replace("style-src 'self'",`style-src 'self' ${styleHashes}`));
+
+// Reveal restores only these display attributes when switching view modes.
+const displayHashes=['display: none;','display: block;'].map(css=>`'sha256-${createHash('sha256').update(css).digest('base64')}'`).join(' ');
+await writeFile(headersFile,(await readFile(headersFile,'utf8')).replace("; img-src",`; style-src-attr 'unsafe-hashes' ${displayHashes}; img-src`));
