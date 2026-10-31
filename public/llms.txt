@@ -1,4 +1,4 @@
-# Cyclist Café MCP
+# MCP Server for Cyclist Cafe
 
 > Public guide: https://ai.cyclist.cafe/
 > Canonical remote MCP endpoint: https://api.cyclist.cafe/mcp

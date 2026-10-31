@@ -25,7 +25,7 @@ test('All internal anchors and declared IDs are valid and unique',()=>{
 test('Every local link, screenshot and script resolves to the standalone output',async()=>{
  const urls=[...html.matchAll(/(?:href|src|data-image)="(\/[^"#?]*)"/g)].map(match=>match[1]);
  for(const url of urls){const file=path.join(root,'dist',url);assert((await stat(file)).isFile(),'Missing local asset '+url);}
- const screenshots=[...html.matchAll(/<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/g)];assert(screenshots.length>=6);
+ const screenshots=[...html.matchAll(/<img[^>]+src="(\/screenshots\/[^"]+)"[^>]+alt="([^"]+)"/g)];assert(screenshots.length>=6);
  for(const [,url,alt]of screenshots){assert(alt.length>35);const bytes=await readFile(path.join(root,'dist',url));assert(bytes.subarray(1,4).toString()==='PNG','Expected real PNG '+url);}
 });
 test('Connection metadata, static safety boundaries and machine-readable guide agree',async()=>{
@@ -40,4 +40,20 @@ test('Connection metadata, static safety boundaries and machine-readable guide a
 test('pnpm is pinned and the project has no runtime/development dependency duplication',async()=>{
  const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));assert.equal(pkg.packageManager,'pnpm@9.15.9');assert.equal(Object.keys(pkg.dependencies||{}).length,0);assert.equal(Object.keys(pkg.devDependencies||{}).length,0);
  execFileSync(process.execPath,['--check','src/app.js'],{cwd:root});
+});
+
+test('SEO metadata and structured data consistently identify the public guide',async()=>{
+ const title=html.match(/<title>([^<]+)<\/title>/)?.[1];assert(title?.includes('MCP Server for Cyclist Cafe'));
+ assert.equal((html.match(/<h1\b/g)||[]).length,1);
+ assert.match(html,/<h1[^>]*>MCP Server for<br>Cyclist Café\./);
+ assert(html.includes('rel="canonical" href="https://ai.cyclist.cafe/"'));
+ assert(html.includes('name="robots" content="index,follow,max-image-preview:large"'));
+ const description=html.match(/name="description" content="([^"]+)"/)?.[1];assert(description?.length>=100&&description.length<=170);assert(description.includes('MCP server for Cyclist Cafe'));
+ const json=html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];assert(json);
+ const schema=JSON.parse(json);assert.equal(schema['@context'],'https://schema.org');
+ const article=schema['@graph'].find(node=>node['@type']==='TechArticle');assert.equal(article.url,'https://ai.cyclist.cafe/');assert.equal(article.about.url,'https://api.cyclist.cafe/mcp');assert.equal(article.mainEntityOfPage,article.url);assert(article.description.includes('Production activation is separate'));
+ const website=schema['@graph'].find(node=>node['@type']==='WebSite');assert.equal(website.url,article.url);
+ const {createHash}=await import('node:crypto'),hash=createHash('sha256').update(json).digest('base64'),headers=await readFile(path.join(root,'dist/_headers'),'utf8');assert(headers.includes(`script-src 'self' 'sha256-${hash}'`));assert(!headers.includes("'unsafe-inline'"));
+ const social=await readFile(path.join(root,'dist/social/mcp-server-cyclist-cafe.jpg'));assert.equal(social.subarray(0,3).toString('hex'),'ffd8ff');assert(html.includes('name="twitter:card" content="summary_large_image"'));
+ const robots=await readFile(path.join(root,'dist/robots.txt'),'utf8'),sitemap=await readFile(path.join(root,'dist/sitemap.xml'),'utf8');assert(robots.includes('Sitemap: https://ai.cyclist.cafe/sitemap.xml'));assert(sitemap.includes('<loc>https://ai.cyclist.cafe/</loc>'));
 });

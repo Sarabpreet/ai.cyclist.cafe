@@ -56,7 +56,7 @@ Only this guide is published by this integration. It does not deploy or enable t
 
 ## Contributing and license
 
-This guide is open source under the [MIT license](LICENSE). Contributions should preserve the zero-dependency build, accessible controls, fixture-data labels and accurate MCP contracts. Run tests and build before opening a pull request. The license does not grant rights to Cyclist Café trademarks or third-party trademarks.
+This guide is open source under the [MIT license](LICENSE). Contributions should preserve the zero-dependency build, accessible controls, fixture-data labels and accurate MCP contracts. Run tests and build before opening a pull request. The license does not grant rights to Cyclist Café trademarks or third-party trademarks. Third-party brand artwork is excluded from the MIT license; original sources are recorded in `public/brands/README.txt`.
 
 ## Readiness and content accuracy
 
@@ -77,3 +77,9 @@ Current clients may offer CIMD/published client identity, but Cyclist's implemen
 `pnpm test` builds the actual static output and verifies unique IDs, local anchors/assets, screenshot references, canonical endpoint, tool names/permissions, JSON examples, machine-readable instructions and security headers. No business API calls or provider messages are made.
 
 Browser QA additionally checks responsive overflow, keyboard tabs, guide search, screenshot open/close, copy controls and filters. It can use an existing isolated headless browser harness; no browser dependency is shipped in the site.
+
+## Search metadata
+
+The page targets “MCP Server for Cyclist Cafe” with a descriptive title, visible H1, natural copy, a canonical URL, robots directives, sitemap, Open Graph/Twitter preview and Organization/WebSite/TechArticle structured data. The schema describes the guide, not a claim that the backend is active. A build-generated CSP hash permits only the exact structured-data block while executable inline scripts remain blocked.
+
+The social preview is `public/social/mcp-server-cyclist-cafe.jpg` (1200 × 630), rendered from the adjacent SVG source. Update the canonical URL, schema, social URLs, llms.txt and sitemap together if the hostname changes. Keep `dateModified` and sitemap `lastmod` tied to actual content changes. Publishing and search indexing are separate; this repository does not submit URLs to Search Console or promise rankings.

@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {cp,mkdir,readFile,rm,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -12,3 +13,7 @@ const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const rows=tools.map(tool=>`<tr data-tool-group="${escape(tool.group)}"><th scope="row"><code>${escape(tool.name)}</code><span>${escape(tool.description)}</span></th><td>${tool.scope?`<code>${escape(tool.scope)}</code>`:'Public'}</td><td>${escape(tool.effect)}</td></tr>`).join('\n');
 await writeFile(path.join(out,'index.html'),html.replace('<!-- TOOL_ROWS -->',rows));
 console.log(`Built ${tools.length} documented tools into dist/. Zero runtime dependencies.`);
+
+// Hash only the static structured data; keep executable inline scripts blocked.
+const structuredData=html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
+if(structuredData){const hash=createHash('sha256').update(structuredData).digest('base64');const file=path.join(out,'_headers');const headers=await readFile(file,'utf8');await writeFile(file,headers.replace("script-src 'self'",`script-src 'self' 'sha256-${hash}'`));}

@@ -2,8 +2,9 @@ const status=document.querySelector('#copy-status');let statusTimer;
 /** Announce copy outcomes without changing the accessible name of the clicked control. */
 function announce(message){status.textContent=message;status.classList.add('visible');clearTimeout(statusTimer);statusTimer=setTimeout(()=>status.classList.remove('visible'),2600);}
 /** Write only the requested documentation text; report denied clipboard access honestly. */
-async function copy(text){try{await navigator.clipboard.writeText(text);announce('Copied. Ready for your next conversation.');}catch{announce('Copy unavailable. Select the text and copy it manually.');}}
-for(const button of document.querySelectorAll('[data-copy]'))button.addEventListener('click',()=>copy(button.dataset.copy));
+const copyTimers=new WeakMap();
+async function copy(text,button){try{await navigator.clipboard.writeText(text);announce('Copied. Ready for your next conversation.');const label=button?.querySelector('[data-copy-feedback]');if(label){label.dataset.originalText??=label.textContent;label.textContent='Copied!';button.dataset.copied='true';clearTimeout(copyTimers.get(button));copyTimers.set(button,setTimeout(()=>{label.textContent=label.dataset.originalText;delete button.dataset.copied;},2400));}}catch{announce('Copy unavailable. Select the text and copy it manually.');}}
+for(const button of document.querySelectorAll('[data-copy]'))button.addEventListener('click',()=>copy(button.dataset.copy,button));
 for(const button of document.querySelectorAll('.copy-code'))button.addEventListener('click',()=>copy(button.closest('.code-block').querySelector('pre code').textContent));
 const tabs=[...document.querySelectorAll('[role="tab"]')];
 /** Activate one assistant guide panel, preserving keyboard and ARIA tab semantics. */
