@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-31",
+  "slides": 72,
+  "chapters": [
+    "Start here",
+    "Opening",
+    "Orders & payments",
+    "Kitchen & floor",
+    "Cash & reports",
+    "Handover",
+    "Closing",
+    "Recovery",
+    "Stocks & menu",
+    "People & staff",
+    "Events & setup",
+    "Staff practice"
+  ],
+  "modules": [
+    "Home",
+    "POS",
+    "Kitchen",
+    "Tables",
+    "Orders",
+    "People",
+    "Cash",
+    "Menu",
+    "Stocks",
+    "Staff",
+    "Events",
+    "Setup"
+  ],
+  "references": {
+    "register": [
+      "pos_cc/docs/REGISTER_FLOW.md",
+      "pos_cc/src/modules/setup/RegisterCashier.tsx",
+      "api.cyclist.cafe/api/domain/registerFlow.ts",
+      "api.cyclist.cafe/api/domain/cashTransaction.ts",
+      "api.cyclist.cafe/api/server/staffOrders.ts"
+    ],
+    "pos": [
+      "pos_cc/src/modules/pos/PosPanel.tsx",
+      "pos_cc/src/modules/pos/usePosCheckout.ts",
+      "pos_cc/src/utils/orderWorkflow.ts"
+    ],
+    "home": [
+      "pos_cc/src/modules/dashboard/DashboardPanel.tsx",
+      "pos_cc/src/modules/dashboard/PersonalDashboard.tsx",
+      "pos_cc/src/modules/dashboard/DashboardOperations.tsx"
+    ],
+    "kitchen": [
+      "pos_cc/src/modules/kitchen/KdsPanel.tsx",
+      "pos_cc/src/utils/orderWorkflow.ts"
+    ],
+    "tables": [
+      "pos_cc/src/modules/tables/TableGrid.tsx",
+      "pos_cc/src/modules/tables/CafeFloor3D.tsx",
+      "pos_cc/src/utils/orderWorkflow.ts"
+    ],
+    "reports": [
+      "pos_cc/src/modules/orders/ReportingPanel.tsx",
+      "pos_cc/src/workspace/historyAccess.ts"
+    ],
+    "cash": [
+      "pos_cc/src/modules/cash/useCashManagement.ts",
+      "pos_cc/src/modules/setup/AdminSettings.tsx",
+      "api.cyclist.cafe/api/domain/cashTransaction.ts"
+    ],
+    "stock": [
+      "api.cyclist.cafe/docs/INVENTORY.md",
+      "pos_cc/src/modules/stocks/StocksPanel.tsx",
+      "pos_cc/src/modules/stocks/MaterialsList.tsx"
+    ],
+    "menu": [
+      "pos_cc/src/modules/menu/MenuManagement.tsx"
+    ],
+    "people": [
+      "pos_cc/src/modules/people/PeoplePanel.tsx",
+      "pos_cc/src/modules/people/PeopleDirectoryTable.tsx",
+      "pos_cc/src/utils/rewardEngine.ts"
+    ],
+    "staff": [
+      "pos_cc/src/modules/staff/StaffPanel.tsx",
+      "pos_cc/src/modules/staff/WeeklyRoster.tsx",
+      "pos_cc/src/modules/staff/RosterCsvTools.tsx",
+      "api.cyclist.cafe/api/server/staffManagement.ts"
+    ],
+    "pay": [
+      "pos_cc/src/modules/staff/StaffPayPanel.tsx"
+    ],
+    "events": [
+      "pos_cc/src/modules/events/EventsWorkspace.tsx",
+      "pos_cc/src/modules/events/EventsPanel.tsx",
+      "pos_cc/docs/EVENTS_API.md"
+    ],
+    "setup": [
+      "pos_cc/src/workspace/modules.ts",
+      "pos_cc/src/modules/setup/AdminSettings.tsx",
+      "pos_cc/src/modules/setup/SetupNavigation.tsx"
+    ],
+    "printer": [
+      "pos_cc/src/modules/setup/PrinterSettingsPanel.tsx",
+      "pos_cc/src/modules/setup/billTemplates.ts"
+    ],
+    "recovery": [
+      "pos_cc/src/modules/setup/OrderRecoveryPanel.tsx",
+      "pos_cc/src/utils/orderPersistence.ts",
+      "pos_cc/src/utils/orderOutbox.ts"
+    ],
+    "music": [
+      "pos_cc/src/modules/setup/MusicPanel.tsx",
+      "pos_cc/src/modules/setup/OperationalAlerts.tsx",
+      "pos_cc/src/context/SpotifyAudioContext.tsx"
+    ],
+    "messaging": [
+      "pos_cc/src/components/EmailTemplatesViewer.tsx",
+      "pos_cc/src/modules/setup/MessageConnections.tsx"
+    ]
+  }
+}

@@ -60,18 +60,18 @@ test('SEO metadata and structured data consistently identify the public guide',a
 
 
 test('Presentation has complete content, notes, local assets and safe controls',async()=>{
- const ppt=await readFile(path.join(root,'dist/ppt/index.html'),'utf8');
+ const ppt=await readFile(path.join(root,'dist/ppt/ai/index.html'),'utf8');
  const slides=[...ppt.matchAll(/<section id="([^"]+)" data-chapter="([^"]+)"/g)];
  assert.equal(slides.length,19);assert.equal(new Set(slides.map(s=>s[1])).size,19);
  assert.equal((ppt.match(/<aside class="notes">/g)||[]).length,19);
  for(const id of ['why','when','connect','takeaway','events','control','boundaries','retry','availability'])assert(slides.some(s=>s[1]===id));
  for(const [,url]of ppt.matchAll(/(?:href|src)="(\/[^"#?]*)/g)){let file=path.join(root,'dist',url);if((await stat(file)).isDirectory())file=path.join(file,'index.html');assert((await stat(file)).isFile(),url);}
  const headers=await readFile(path.join(root,'dist/_headers'),'utf8');assert(headers.includes("style-src 'self' 'sha256-"));assert(!headers.includes("'unsafe-inline'"));
- assert(ppt.includes('https://api.cyclist.cafe/mcp'));assert(ppt.includes('https://ai.cyclist.cafe/ppt/'));assert(ppt.includes('fictional data'));assert(ppt.includes('Publishing this presentation does not enable MCP.'));
+ assert(ppt.includes('https://api.cyclist.cafe/mcp'));assert(ppt.includes('https://ai.cyclist.cafe/ppt/ai/'));assert(ppt.includes('fictional data'));assert(ppt.includes('Publishing this presentation does not enable MCP.'));
  assert(!/<iframe|<script[^>]*src="https?:/.test(ppt));assert(!/ style=| onclick=/.test(ppt));
- const js=await readFile(path.join(root,'dist/ppt/presentation.js'),'utf8');assert(!/\bfetch\(|XMLHttpRequest|localStorage|document\.cookie/.test(js));
- execFileSync(process.execPath,['--check','public/ppt/presentation.js'],{cwd:root});
- assert((await readFile(path.join(root,'dist/ppt/vendor/LICENSE'),'utf8')).includes('Permission is hereby granted'));
+ const js=await readFile(path.join(root,'dist/ppt/ai/presentation.js'),'utf8');assert(!/\bfetch\(|XMLHttpRequest|localStorage|document\.cookie/.test(js));
+ execFileSync(process.execPath,['--check','public/ppt/ai/presentation.js'],{cwd:root});
+ assert((await readFile(path.join(root,'dist/ppt/ai/vendor/LICENSE'),'utf8')).includes('Permission is hereby granted'));
  assert((await readFile(path.join(root,'dist/sitemap.xml'),'utf8')).includes('<loc>https://ai.cyclist.cafe/ppt/</loc>'));
 });
 
@@ -82,4 +82,33 @@ test('Static preview resolves /ppt with and without a trailing slash and rejects
  assert.equal(await resolveStaticFile(dist,'/'),path.join(dist,'index.html'));
  await assert.rejects(resolveStaticFile(dist,'/ppt/missing.js'));
  await assert.rejects(resolveStaticFile(dist,'/../package.json'));
+});
+
+
+test('Presentation library separates AI and POS decks and retains all training companions',async()=>{
+ const base=path.join(root,'dist/ppt');
+ const hub=await readFile(path.join(base,'index.html'),'utf8');
+ assert(hub.includes('href="/ppt/ai/"'));assert(hub.includes('href="/ppt/pos/"'));
+ const {resolveStaticFile}=await import('../scripts/static-file.mjs');
+ for(const name of ['ai','pos']){
+  for(const suffix of ['', '/', '/index.html'])assert.equal(await resolveStaticFile(path.join(root,'dist'),'/ppt/'+name+suffix),path.join(base,name,'index.html'));
+  const page=await readFile(path.join(base,name,'index.html'),'utf8');
+  assert(page.includes('href="/ppt/"'));assert(page.includes('https://ai.cyclist.cafe/ppt/'+name+'/'));
+  for(const [,url]of page.matchAll(/(?:href|src)="([^"#?]+)"/g)){
+   if(/^https?:/.test(url))continue;
+   let file=url.startsWith('/')?path.join(root,'dist',url):path.join(base,name,url);
+   if((await stat(file)).isDirectory())file=path.join(file,'index.html');
+   assert((await stat(file)).isFile(),'Missing deck asset '+url);
+  }
+ }
+ const vm=await import('node:vm'),context={window:{}};
+ vm.runInNewContext(await readFile(path.join(base,'pos/deck-data.js'),'utf8'),context);
+ const slides=context.window.POS_TRAINING.slides;assert.equal(slides.length,72);
+ assert.equal(new Set(slides.map(slide=>slide.id)).size,72);assert(slides.every(slide=>slide.notes.length>0));
+ const training=await readFile(path.join(base,'pos/training.js'),'utf8');assert(!training.includes(' style='));
+ for(const file of ['Cyclist-Cafe-POS-Staff-Training.pdf','Daily-Shift-Checklist.pdf'])assert.equal((await readFile(path.join(base,'pos',file))).subarray(0,5).toString(),'%PDF-');
+ const legacy=await readFile(path.join(base,'library.js'),'utf8');
+ for(const [hash,search,expected]of [['#/why','','/ppt/ai/#/why'],['','?print-pdf','/ppt/ai/?print-pdf'],['','','']]){
+  let actual='';vm.runInNewContext(legacy,{URLSearchParams,location:{hash,search,replace:value=>actual=value}});assert.equal(actual,expected);
+ }
 });

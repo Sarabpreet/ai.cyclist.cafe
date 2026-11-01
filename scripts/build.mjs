@@ -21,6 +21,7 @@ if(structuredData){const hash=createHash('sha256').update(structuredData).digest
 // Reveal.js 6.0.2 print styles for the fixed 1280×720 deck (margin 0.035).
 // Permit these exact blocks, never unsafe-inline or arbitrary executable scripts.
 const printStyles=['@page{size:1324px 745px; margin: 0px;}','.reveal section>img, .reveal section>video, .reveal section>iframe{max-width: 1280px; max-height:720px}'];
+printStyles.push('@page{size:1600px 900px; margin: 0px;}','.reveal section>img, .reveal section>video, .reveal section>iframe{max-width: 1600px; max-height:900px}');
 const styleHashes=printStyles.map(css=>`'sha256-${createHash('sha256').update(css).digest('base64')}'`).join(' ');
 const headersFile=path.join(out,'_headers');
 await writeFile(headersFile,(await readFile(headersFile,'utf8')).replace("style-src 'self'",`style-src 'self' ${styleHashes}`));

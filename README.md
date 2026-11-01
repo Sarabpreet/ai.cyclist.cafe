@@ -85,16 +85,20 @@ The page targets “MCP Server for Cyclist Cafe” with a descriptive title, vis
 The social preview is `public/social/mcp-server-cyclist-cafe.jpg` (1200 × 630), rendered from the adjacent SVG source. Update the canonical URL, schema, social URLs, llms.txt and sitemap together if the hostname changes. Keep `dateModified` and sitemap `lastmod` tied to actual content changes. Publishing and search indexing are separate; this repository does not submit URLs to Search Console or promise rankings.
 
 
-## Presentation at /ppt
+## Presentations at /ppt
 
-`public/ppt/` is a 19-slide Reveal.js presentation about why the café exposes MCP, how customers connect and use it, and when it is useful. Open `/ppt/` (or `/ppt`) on the local preview or published guide. The main navigation links to it.
+`/ppt/` is the presentation library. `/ppt/ai/` (`public/ppt/ai/`) is a 19-slide Reveal.js presentation about why the café exposes MCP, how customers connect and use it, and when it is useful. Open `/ppt/ai/` (or `/ppt/ai`) on the local preview or published guide. The main navigation links to it.
 
 - Arrow keys or swipe: navigate; Esc: overview; F: full screen.
 - Slides / M: jump to a slide; Notes / S: open the current slide's public presenter notes.
-- Print / PDF opens `/ppt/?print-pdf`. In Chromium's print dialog, choose Save as PDF, landscape, no margins and background graphics. See [Reveal.js PDF instructions](https://revealjs.com/pdf-export/).
+- Print / PDF opens `/ppt/ai/?print-pdf`. In Chromium's print dialog, choose Save as PDF, landscape, no margins and background graphics. See [Reveal.js PDF instructions](https://revealjs.com/pdf-export/).
 - The server URL has a copy control. The deck never calls the business API or creates orders or RSVPs.
 - Screenshot slides reuse labeled, fictional local fixtures. Hosted activation and client/SMS verification remain separate.
 
-Reveal.js 6.0.2 is vendored with its MIT license in `public/ppt/vendor/`, verified from the official npm tarball. This keeps the existing pnpm build free of package dependencies and avoids a CDN requirement. Theme and controls live in `presentation.css` and `presentation.js`; slide content and notes are editable in `index.html`.
+Reveal.js 6.0.2 is vendored with its MIT license in `public/ppt/ai/vendor/`, verified from the official npm tarball. This keeps the existing pnpm build free of package dependencies and avoids a CDN requirement. Theme and controls live in `presentation.css` and `presentation.js`; slide content and notes are editable in `index.html`.
 
 The production CSP keeps executable scripts restricted to self. The build hashes Reveal's two fixed print CSS blocks and its two display-restoration attributes instead of allowing arbitrary inline styles. The local preview serves the built security headers too; recheck printing after changing Reveal, deck dimensions or margins.
+
+The POS staff training is at `/ppt/pos/` (`public/ppt/pos/`): 72 Reveal.js slides covering the POS and Open → Use system → Hand over → Close day. The deck includes a training PDF, daily checklist PDF/HTML, and trainer notes. It contains fictional examples and never calls the business API. `deck-data.js` holds its content; the training source remains unchanged in the separate `pos-staff-training` folder.
+
+Old `/ppt/#/slide-id` and `/ppt/?print-pdf` links forward to the MCP deck at `/ppt/ai/`. Both `/ppt/ai` and `/ppt/pos` resolve without a trailing slash on the preview; Cloudflare Pages canonicalizes directory URLs.
