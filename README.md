@@ -102,3 +102,13 @@ The production CSP keeps executable scripts restricted to self. The build hashes
 The POS staff training is at `/ppt/pos/` (`public/ppt/pos/`): 72 Reveal.js slides covering the POS and Open → Use system → Hand over → Close day. The deck includes a training PDF, daily checklist PDF/HTML, and trainer notes. It contains fictional examples and never calls the business API. `deck-data.js` holds its content; the training source remains unchanged in the separate `pos-staff-training` folder.
 
 Old `/ppt/#/slide-id` and `/ppt/?print-pdf` links forward to the MCP deck at `/ppt/ai/`. Both `/ppt/ai` and `/ppt/pos` resolve without a trailing slash on the preview; Cloudflare Pages canonicalizes directory URLs.
+
+## Restricted POS presentation
+
+`/ppt/pos/` and every nested asset/download are protected by a Cloudflare Pages advanced-mode worker. The public library and sitemap do not list this deck. Configure `POS_PRESENTATION_PASSWORD` and a random `POS_PRESENTATION_COOKIE_SECRET` as encrypted production Pages secrets before deploying. Neither value is committed or included in the browser bundle. Missing configuration fails closed.
+
+Successful entry issues a signed HttpOnly, Secure, SameSite=Strict cookie scoped to `/ppt/pos`, expiring after 90 days. It remembers that browser, not a person across devices. Password or signing-key rotation invalidates existing access. Protected responses use `private, no-store` and `noindex, nofollow, noarchive`; a localStorage flag cannot bypass the server check. The worker includes a best-effort per-isolate attempt limit, not a durable rate limiter.
+
+Local preview uses the same worker: provide both variables through the shell before `pnpm preview`. For local tests use disposable test values. Do not use a plain static-file server to preview access control.
+
+The repository and previous public versions already contain the training source. This gate controls hosted access; it does not make public Git history confidential or retract earlier copies. Do not put confidential staff/customer records in the training files.

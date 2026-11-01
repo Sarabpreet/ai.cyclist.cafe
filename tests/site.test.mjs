@@ -88,7 +88,8 @@ test('Static preview resolves /ppt with and without a trailing slash and rejects
 test('Presentation library separates AI and POS decks and retains all training companions',async()=>{
  const base=path.join(root,'dist/ppt');
  const hub=await readFile(path.join(base,'index.html'),'utf8');
- assert(hub.includes('href="/ppt/ai/"'));assert(hub.includes('href="/ppt/pos/"'));
+ assert(hub.includes('href="/ppt/ai/"'));assert(!hub.includes('/ppt/pos'));assert(!hub.includes('POS training'));
+ assert(!(await readFile(path.join(root,'dist/sitemap.xml'),'utf8')).includes('/ppt/pos'));
  const {resolveStaticFile}=await import('../scripts/static-file.mjs');
  for(const name of ['ai','pos']){
   for(const suffix of ['', '/', '/index.html'])assert.equal(await resolveStaticFile(path.join(root,'dist'),'/ppt/'+name+suffix),path.join(base,name,'index.html'));

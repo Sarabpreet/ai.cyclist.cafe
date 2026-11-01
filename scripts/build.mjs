@@ -29,3 +29,11 @@ await writeFile(headersFile,(await readFile(headersFile,'utf8')).replace("style-
 // Reveal restores only these display attributes when switching view modes.
 const displayHashes=['display: none;','display: block;'].map(css=>`'sha256-${createHash('sha256').update(css).digest('base64')}'`).join(' ');
 await writeFile(headersFile,(await readFile(headersFile,'utf8')).replace("; img-src",`; style-src-attr 'unsafe-hashes' ${displayHashes}; img-src`));
+
+// Gate every POS file before it reaches Pages' static assets. Never embed secrets.
+const policies=await readFile(headersFile,'utf8');
+const posCsp=policies.match(/Content-Security-Policy: (.+)/)[1].replace("form-action 'none'","form-action 'self'");
+const worker=(await readFile(path.join(root,'src/pos-access.mjs'),'utf8')).replace("'__POS_CSP__'",JSON.stringify(posCsp));
+await writeFile(path.join(out,'_worker.js'),worker);
+// Run before all static assets, including encoded forms of the protected path.
+await writeFile(path.join(out,'_routes.json'),JSON.stringify({version:1,include:['/*'],exclude:[]}));
