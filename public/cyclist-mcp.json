@@ -11,12 +11,21 @@
     "resource": "https://api.cyclist.cafe/mcp",
     "protectedResourceMetadata": "https://api.cyclist.cafe/.well-known/oauth-protected-resource/mcp",
     "authorizationServerMetadata": "https://api.cyclist.cafe/.well-known/oauth-authorization-server",
-    "scopes": ["orders:quote", "orders:checkout", "orders:read", "events:read", "events:rsvp"]
+    "scopes": [
+      "orders:quote",
+      "orders:checkout",
+      "orders:read",
+      "events:read",
+      "events:rsvp",
+      "rewards:read"
+    ]
   },
   "customerConfirmationRequired": true,
-  "orderFulfilment": ["takeaway"],
+  "orderFulfilment": [
+    "takeaway"
+  ],
   "orderPayment": "cafe-counter",
   "capabilityReference": "https://ai.cyclist.cafe/tools.json",
   "availability": "Requires hosted deployment and administrator enablement. This metadata is documentation, not a live health result.",
-  "checkedAt": "2026-11-01"
+  "checkedAt": "2026-11-02"
 }

@@ -7,12 +7,12 @@ import path from 'node:path';
 const root=fileURLToPath(new URL('..',import.meta.url));
 execFileSync(process.execPath,['scripts/build.mjs'],{cwd:root});
 const html=await readFile(path.join(root,'dist/index.html'),'utf8'),tools=JSON.parse(await readFile(path.join(root,'dist/tools.json'),'utf8'));
-const expected=['get_cafe_status','search_menu','get_menu_item','list_events','get_event','quote_order','prepare_checkout','get_checkout_status','get_my_order','prepare_event_rsvp','get_event_rsvp_status','get_my_event_rsvps'];
+const expected=['get_cafe_status','search_menu','get_menu_item','list_events','get_event','quote_order','prepare_checkout','get_checkout_status','get_my_order','prepare_event_rsvp','get_event_rsvp_status','get_my_event_rsvps','list_my_orders','get_my_rewards','get_table_status'];
 
-test('All 12 current contracts are rendered statically and examples use real schema field names',()=>{
- assert.deepEqual(tools.map(tool=>tool.name).sort(),expected.sort());assert.equal(new Set(tools.map(tool=>tool.name)).size,12);
+test('All 15 documented contracts are rendered statically and examples use real schema field names',()=>{
+ assert.deepEqual(tools.map(tool=>tool.name).sort(),expected.sort());assert.equal(new Set(tools.map(tool=>tool.name)).size,15);
  for(const tool of tools){assert(html.includes(`<code>${tool.name}</code>`));assert(tool.example&&typeof tool.example==='object');assert(!['customerId','price','isPaid','paymentMethod'].some(key=>key in tool.example));}
- assert.equal(tools.filter(tool=>tool.scope===null).length,5);
+ assert.equal(tools.filter(tool=>tool.scope===null).length,6);
  assert.equal(tools.find(tool=>tool.name==='quote_order').example.fulfilment,'takeaway');
  assert.match(tools.find(tool=>tool.name==='prepare_event_rsvp').example.requestId,/^[a-f0-9-]{36}$/);
  assert(!html.includes('<!-- TOOL_ROWS -->'));

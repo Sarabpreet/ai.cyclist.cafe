@@ -11,6 +11,7 @@ This is documentation, not a live server status assertion. Features require a de
 - get_cafe_status: opening hours, local timezone, ordering availability.
 - search_menu: live public products/combos and availability; accepts query, category, fulfilment (dine-in/takeaway), availableOnly, vegetarian, includeCombos, offset and limit.
 - get_menu_item: use the exact id and kind (product/combo) from search; inspect options and takeaway eligibility.
+- get_table_status: public saved table occupancy and seat counts; no guest or bill details. Not a reservation. Requires administrator enablement.
 - list_events: published upcoming events with query, category, from/to ISO datetime, offset and limit. Event category, status, availability and schema.org Event data are returned.
 - get_event: use the exact eventId from list_events. Drafts/deleted events and attendee contacts are private.
 
@@ -24,7 +25,7 @@ Discovery:
 - https://api.cyclist.cafe/.well-known/oauth-protected-resource/mcp
 - https://api.cyclist.cafe/.well-known/oauth-authorization-server
 
-Scopes: orders:quote, orders:checkout, orders:read, events:read, events:rsvp. Request only needed scopes. Existing grants do not gain new event permissions silently. Follow the server's challenge and metadata; do not use POS cookies, staff credentials or mobile/Firebase bearer tokens as MCP tokens.
+Scopes: orders:quote, orders:checkout, orders:read, events:read, events:rsvp, rewards:read. Request only needed scopes. Existing grants do not gain new permissions silently. A connected account alone does not prove orders:read or rewards:read consent. Follow the server's challenge and metadata; do not use POS cookies, staff credentials or mobile/Firebase bearer tokens as MCP tokens.
 
 The customer verifies their phone on the Cyclist page and completes their existing People/CRM registration and terms acceptance if needed. Never collect OTPs/passwords/tokens in chat. The isolated customer session does not replace a staff POS session. Grant revocation blocks future access; already-confirmed business records are retained.
 
@@ -36,7 +37,15 @@ The customer verifies their phone on the Cyclist page and completes their existi
 4. prepare_checkout with quoteId. It returns a trusted customer checkout URL.
 5. Ask the customer to open that returned URL, sign in and explicitly confirm the exact INR bill. Never approve it on their behalf.
 6. get_checkout_status with checkoutId. Only a submitted order proves placement.
-7. get_my_order with orderId for the customer's own recent order (last seven days).
+7. For “my recent orders”, call list_my_orders with limit=5 (default); for “my latest order”, limit=1. Requires valid customer OAuth and explicit orders:read, even if already connected.
+8. Return canonical orderId, display orderNumber, placedAt (UTC ISO, Asia/Kolkata context), status, fulfilment, items/quantities, INR total and paymentStatus when available. Never infer IDs from display strings.
+9. Pass the returned canonical orderId to get_my_order for details. Alternatively use explicit orderNumber, exactly one selector. No match does not disclose another customer’s order.
+10. Follow nextCursor unchanged until null. Limit is 1–20, newest first, seven days only. checkedAt identifies freshness. Cursors are opaque, customer/connection-scoped, expire after 15 minutes and may expire on server restart. A 400 cursor error requires a fresh first page. An empty list means no matching orders, not missing authentication.
+
+## My rewards and public tables
+
+get_my_rewards requires explicit rewards:read consent and returns current points, INR program rules and checkedAt, without contact details or a staff ledger. It cannot redeem or change points. If permission is missing, request re-consent; do not claim a zero balance.
+get_table_status is public when enabled in Setup. It returns table names, capacity and available/occupied/unavailable status plus totals and checkedAt. Never promise a table or reserve a seat based on this snapshot.
 
 Payment is at the café counter. MCP does not accept online payments, select tables, arrange delivery, redeem loyalty points, modify submitted orders, edit stock or mark payment as received. Required customized combos may need individual products instead. Price/stock/eligibility changes require a new quote and approval, not silent substitution.
 
@@ -69,4 +78,6 @@ The backend's npm run mcp:local starts a desktop stdio preview of public menu an
 - Privacy: https://cyclist.cafe/privacy/
 - Terms: https://cyclist.cafe/terms/
 
-Contracts and guide checked 1 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.
+Recent-order discovery, rewards and table-status additions require the corresponding API release and refreshed client tool discovery. Publishing this guide alone does not make those methods live.
+
+Contracts and guide checked 2 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.

@@ -112,3 +112,8 @@ Successful entry issues a signed HttpOnly, Secure, SameSite=Strict cookie scoped
 Local preview uses the same worker: provide both variables through the shell before `pnpm preview`. For local tests use disposable test values. Do not use a plain static-file server to preview access control.
 
 The repository and previous public versions already contain the training source. This gate controls hosted access; it does not make public Git history confidential or retract earlier copies. Do not put confidential staff/customer records in the training files.
+
+
+## Recent orders, rewards and table status additions
+
+The guide now documents `list_my_orders`, explicit `orderNumber` lookup in `get_my_order`, `get_my_rewards` and public `get_table_status`. These require the corresponding API release; documentation publication does not activate them. Recent orders use orders:read, a rolling seven-day limit, 5 results by default (1–20), customer/grant-scoped opaque pagination, and canonical IDs for follow-up details. Reward reads require new rewards:read consent. Table snapshots need the public tool enabled in Setup and never reserve seats. Refresh tool discovery after the API release, then re-consent only needed permissions. Existing quote/checkout and RSVP confirmations remain mandatory.
