@@ -39,6 +39,7 @@ The customer verifies their phone on the Cyclist page and completes their existi
 6. get_checkout_status with checkoutId. Only a submitted order proves placement.
 7. For “my recent orders”, call list_my_orders with limit=5 (default); for “my latest order”, limit=1. Requires valid customer OAuth and explicit orders:read, even if already connected.
 8. Return canonical orderId, display orderNumber, placedAt (UTC ISO, Asia/Kolkata context), status, fulfilment, items/quantities, INR total and paymentStatus when available. Never infer IDs from display strings.
+New confirmed AI orders use short customer-facing callouts such as AI101 and AI102. Existing order numbers remain valid. Treat the callout as orderNumber, never as canonical orderId.
 9. Pass the returned canonical orderId to get_my_order for details. Alternatively use explicit orderNumber, exactly one selector. No match does not disclose another customer’s order.
 10. Follow nextCursor unchanged until null. Limit is 1–20, newest first, seven days only. checkedAt identifies freshness. Cursors are opaque, customer/connection-scoped, expire after 15 minutes and may expire on server restart. A 400 cursor error requires a fresh first page. An empty list means no matching orders, not missing authentication.
 
