@@ -26,6 +26,6 @@
   ],
   "orderPayment": "cafe-counter",
   "capabilityReference": "https://ai.cyclist.cafe/tools.json",
-  "availability": "Requires hosted deployment and administrator enablement. This metadata is documentation, not a live health result.",
+  "availability": "Hosted tool discovery and public menu, events and table reads verified 2026-11-02. Customer tools require explicitly consented OAuth scopes; actions require customer confirmation. This metadata is not a real-time health result.",
   "checkedAt": "2026-11-02"
 }

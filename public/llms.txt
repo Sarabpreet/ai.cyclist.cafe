@@ -82,3 +82,5 @@ The backend's npm run mcp:local starts a desktop stdio preview of public menu an
 Recent-order discovery, rewards and table-status additions require the corresponding API release and refreshed client tool discovery. Publishing this guide alone does not make those methods live.
 
 Contracts and guide checked 2 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.
+
+Hosted verification (2 November 2026): all 15 enabled tools discovered through the real MCP transport; public menu search, item details, café status, events and table status succeeded. Personal recent-order/reward tools challenged anonymous calls with 401. API/database health passed. No production test orders or RSVPs were created. These are dated observations, not a live-health guarantee.
