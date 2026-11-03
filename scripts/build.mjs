@@ -11,7 +11,7 @@ const html=await readFile(path.join(out,'index.html'),'utf8');
 /** Escape documentation data before interpolating it into the static tool reference. */
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rows=tools.map(tool=>`<tr data-tool-group="${escape(tool.group)}"><th scope="row"><code>${escape(tool.name)}</code><span>${escape(tool.description)}</span></th><td>${tool.scope?`<code>${escape(tool.scope)}</code>`:'Public'}</td><td>${escape(tool.effect)}</td></tr>`).join('\n');
-await writeFile(path.join(out,'index.html'),html.replace('<!-- TOOL_ROWS -->',rows));
+await writeFile(path.join(out,'index.html'),html.replace('<!-- TOOL_ROWS -->',rows).replace(/<!-- TOOL_COUNT -->/g,String(tools.length)).replace('<!-- TOOL_OPTIONS -->',tools.map(tool=>`<option value="${escape(tool.name)}">${escape(tool.name)}</option>`).join('')));
 console.log(`Built ${tools.length} documented tools into dist/. No installed runtime packages.`);
 
 // Hash only the static structured data; keep executable inline scripts blocked.

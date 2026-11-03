@@ -32,7 +32,7 @@ test('Connection metadata, static safety boundaries and machine-readable guide a
  const metadata=JSON.parse(await readFile(path.join(root,'dist/cyclist-mcp.json'),'utf8')),llms=await readFile(path.join(root,'dist/llms.txt'),'utf8');
  assert.equal(metadata.endpoint,'https://api.cyclist.cafe/mcp');assert.equal(metadata.customerConfirmationRequired,true);assert.equal(metadata.authentication.clientRegistration,'dynamic-client-registration');
  for(const name of expected)assert(llms.includes(name),'Agent instructions missing '+name);
- for(const text of ['Local flows verified','fictional test data','CIMD','DCR','payment is collected at the café counter','does not activate the server'])assert(html.includes(text),text);
+ for(const text of ['Local flows verified','fictional test data','CIMD','DCR','Payment is collected at the café counter','does not activate the server'])assert(html.includes(text),text);
  assert(!/<iframe|<script[^>]*src="https?:|<link[^>]*href="https?:[^>]*(?:stylesheet|woff)/i.test(html));
  const headers=await readFile(path.join(root,'dist/_headers'),'utf8');assert(headers.includes("default-src 'self'"));assert(headers.includes("frame-ancestors 'none'"));
  const app=await readFile(path.join(root,'dist/app.js'),'utf8');assert(!/localStorage|document\.cookie|innerHTML|api\.cyclist\.cafe/.test(app),'Guide must not store credentials, inject search HTML or call business API');
@@ -112,4 +112,27 @@ test('Presentation library separates AI and POS decks and retains all training c
  for(const [hash,search,expected]of [['#/why','','/ppt/ai/#/why'],['','?print-pdf','/ppt/ai/?print-pdf'],['','','']]){
   let actual='';vm.runInNewContext(legacy,{URLSearchParams,location:{hash,search,replace:value=>actual=value}});assert.equal(actual,expected);
  }
+});
+
+test('Actual SDK schema snapshot, human examples, scopes and all selector options stay in sync',async()=>{
+ const snapshot=JSON.parse(await readFile(path.join(root,'dist/mcp-tools.schema.json'),'utf8'));
+ assert.deepEqual(snapshot.tools.map(tool=>tool.name).sort(),tools.map(tool=>tool.name).sort());
+ for(const tool of tools){
+  const actual=snapshot.tools.find(row=>row.name===tool.name);assert.deepEqual(tool.inputSchema,actual.inputSchema);assert.equal(tool.description,actual.description);
+  const security=actual._meta.securitySchemes[0];assert.equal(tool.scope,security.type==='oauth2'?security.scopes[0]:null);
+  for(const field of Object.keys(tool.example))assert(field in actual.inputSchema.properties,tool.name+' example uses an unknown argument');
+  for(const field of actual.inputSchema.required||[])assert(field in tool.example,tool.name+' example omits required '+field);
+  assert(html.includes('<option value="'+tool.name+'">'+tool.name+'</option>'),'Example selector missing '+tool.name);
+ }
+ assert(html.includes('All tools <span>15</span>'));assert(!html.includes('<!-- TOOL_COUNT -->'));assert(!html.includes('<!-- TOOL_OPTIONS -->'));
+ assert.equal(tools.find(row=>row.name==='search_menu').inputSchema.properties.detail.default,'summary');
+ assert.equal(snapshot.checkoutPolicy.linkTtlMinutes,10);assert.equal(snapshot.checkoutPolicy.requiresSignIn,false);assert.equal(snapshot.checkoutPolicy.preparationRequiresPayment,true);
+});
+test('Ticket links, cancellation, payment gating and RSVP authentication are distinguished with accurate deployment verification limits',async()=>{
+ const llms=await readFile(path.join(root,'dist/llms.txt'),'utf8'),metadata=JSON.parse(await readFile(path.join(root,'dist/cyclist-mcp.json'),'utf8'));
+ assert.equal(metadata.toolCount,15);assert.equal(metadata.release.status,'deployed-contracts-verified');
+ for(const text of ['#ticket=','No repeat login','Not paid','cancel','fresh quote','No production orders','RSVP links'])assert(llms.includes(text),text);
+ for(const tool of ['confirm_order','cancel_order','pay_order','confirm_ticket','cancel_ticket'])assert(!tools.some(row=>row.name===tool),'A browser-only action was advertised as an MCP tool');
+ assert(html.includes('Live MCP discovery reports all 15 tools'));assert(html.includes('RSVP links also last ten minutes'));assert(html.includes('without signing in again'));assert(html.includes('No repeat login'));
+ const deck=await readFile(path.join(root,'dist/ppt/ai/index.html'),'utf8');assert(deck.includes('Not paid'));assert(deck.includes('Hosted discovery verified'));assert(!deck.includes('Verify your identity and approve the exact order.'));
 });

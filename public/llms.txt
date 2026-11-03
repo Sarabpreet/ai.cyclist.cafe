@@ -9,7 +9,7 @@ This is documentation, not a live server status assertion. Features require a de
 ## Public read tools
 
 - get_cafe_status: opening hours, local timezone, ordering availability.
-- search_menu: live public products/combos and availability; accepts query, category, fulfilment (dine-in/takeaway), availableOnly, vegetarian, includeCombos, offset and limit.
+- search_menu: live public products/combos and availability; accepts query, category, fulfilment (dine-in/takeaway), availableOnly, vegetarian, includeCombos, offset, limit and detail (summary/full). Do not fetch every item separately when one detailed search is sufficient.
 - get_menu_item: use the exact id and kind (product/combo) from search; inspect options and takeaway eligibility.
 - get_table_status: public saved table occupancy and seat counts; no guest or bill details. Not a reservation. Requires administrator enablement.
 - list_events: published upcoming events with query, category, from/to ISO datetime, offset and limit. Event category, status, availability and schema.org Event data are returned.
@@ -31,12 +31,12 @@ The customer verifies their phone on the Cyclist page and completes their existi
 
 ## Takeaway ordering
 
-1. get_cafe_status -> search_menu -> get_menu_item.
+1. Start with search_menu; it already returns café status and availability. Use get_cafe_status for an explicit hours/status question, and get_menu_item for selected-item options. Use detail=full when descriptions/options for several search results are needed.
 2. Resolve exact quantity and listed options, including required single-choice modifiers.
 3. quote_order with fulfilment=takeaway and exact items. The returned private quote is temporary and holds no stock.
-4. prepare_checkout with quoteId. It returns a trusted customer checkout URL.
-5. Ask the customer to open that returned URL, sign in and explicitly confirm the exact INR bill. Never approve it on their behalf.
-6. get_checkout_status with checkoutId. Only a submitted order proves placement.
+4. prepare_checkout with quoteId. Send the complete returned checkoutUrl to the customer in chat, including #ticket=…. It is a private 256-bit ticket capability, valid for exactly 10 minutes from first preparation. Retries reuse the ticket/deadline but issue a fresh link; they do not create an order or renew the deadline.
+5. Ask the customer to open the returned link, review the INR bill and explicitly confirm or cancel. No repeat login is required on that ticket link. Opening it is read-only. Never visit, preview through a tool, confirm or cancel it on the customer’s behalf. Never strip, fabricate or log its private fragment. Anyone receiving the link can act on that ticket only, so keep it private. It never grants account/history/rewards access. RSVP links do not share this login exception.
+6. get_checkout_status with checkoutId. Only a submitted order proves a ticket was created. It is visible in POS/Kitchen Active as Not paid until staff record counter payment. Do not claim Kitchen is processing it before payment and Kitchen acceptance. Link cancellation closes an unconfirmed or unpaid waiting ticket; a cancelled ticket needs a fresh quote/link and cannot be revived. Paid/progressed tickets need staff assistance. An already-confirmed unpaid ticket is not automatically cancelled when the link expires; use authenticated status tools or contact staff.
 7. For “my recent orders”, call list_my_orders with limit=5 (default); for “my latest order”, limit=1. Requires valid customer OAuth and explicit orders:read, even if already connected.
 8. Return canonical orderId, display orderNumber, placedAt (UTC ISO, Asia/Kolkata context), status, fulfilment, items/quantities, INR total and paymentStatus when available. Never infer IDs from display strings.
 New confirmed AI orders use short customer-facing callouts such as AI101 and AI102. Existing order numbers remain valid. Treat the callout as orderNumber, never as canonical orderId.
@@ -48,7 +48,7 @@ New confirmed AI orders use short customer-facing callouts such as AI101 and AI1
 get_my_rewards requires explicit rewards:read consent and returns current points, INR program rules and checkedAt, without contact details or a staff ledger. It cannot redeem or change points. If permission is missing, request re-consent; do not claim a zero balance.
 get_table_status is public when enabled in Setup. It returns table names, capacity and available/occupied/unavailable status plus totals and checkedAt. Never promise a table or reserve a seat based on this snapshot.
 
-Payment is at the café counter. MCP does not accept online payments, select tables, arrange delivery, redeem loyalty points, modify submitted orders, edit stock or mark payment as received. Required customized combos may need individual products instead. Price/stock/eligibility changes require a new quote and approval, not silent substitution.
+Payment is at the café counter. MCP does not accept online payments, select tables, arrange delivery, redeem loyalty points, edit submitted items or cancel paid/progressed orders, edit stock or mark payment as received. Required customized combos may need individual products instead. Price/stock/eligibility changes require a new quote and approval, not silent substitution.
 
 ## Events and RSVP
 
@@ -59,7 +59,7 @@ Payment is at the café counter. MCP does not accept online payments, select tab
 5. get_event_rsvp_status with intentId; inspect status and the CURRENT reservation response. A previously confirmed Going request does not undo a later cancellation.
 6. get_my_event_rsvps reads only the connected customer's own reservations.
 
-Going is subject to capacity at confirmation. Interested is not a reservation. Cancellation requires customer confirmation and releases the seat. Links expire after ten minutes. The shared event service rechecks event revision, prior response, expiry, CRM ownership, permissions and capacity. Results appear in Events -> RSVPs and People -> Events. No guest bookings, event payments, attendee-list access or staff check-in tools are exposed to agents.
+For paid events, requiresTicketPurchase=true and canMarkGoing=false: direct the customer to the existing event page to purchase tickets; do not prepare a free Going RSVP. Going for eligible free events is subject to capacity at confirmation. Interested is not a reservation. Cancellation requires customer confirmation and releases the seat. Links expire after ten minutes. The shared event service rechecks event revision, prior response, expiry, CRM ownership, permissions and capacity. Results appear in Events -> RSVPs and People -> Events. No guest bookings, event payments, attendee-list access or staff check-in tools are exposed to agents.
 
 ## Error handling
 
@@ -79,8 +79,8 @@ The backend's npm run mcp:local starts a desktop stdio preview of public menu an
 - Privacy: https://cyclist.cafe/privacy/
 - Terms: https://cyclist.cafe/terms/
 
-Recent-order discovery, rewards and table-status additions require the corresponding API release and refreshed client tool discovery. Publishing this guide alone does not make those methods live.
+Release status (4 November 2026): hosted discovery reports server version 1.2.0 and all 15 tools. The deployed API/POS contain the ten-minute private ticket links, customer-page cancellation and payment-before-Kitchen acceptance. Refresh client tool discovery after a release. Enabled tools and explicitly consented scopes still determine access; documentation publication alone never grants permissions. No production orders, RSVPs or SMS were created by this verification; end-to-end examples use isolated fixtures. All 15 tool schemas are documented in /mcp-tools.schema.json; that snapshot uses reference limits, while live tools/list is authoritative for configured limits.
 
-Contracts and guide checked 2 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.
+Contracts and guide checked 4 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.
 
 Hosted verification (2 November 2026): all 15 enabled tools discovered through the real MCP transport; public menu search, item details, café status, events and table status succeeded. Personal recent-order/reward tools challenged anonymous calls with 401. API/database health passed. No production test orders or RSVPs were created. These are dated observations, not a live-health guarantee.

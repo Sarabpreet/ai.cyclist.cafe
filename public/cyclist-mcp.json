@@ -27,5 +27,28 @@
   "orderPayment": "cafe-counter",
   "capabilityReference": "https://ai.cyclist.cafe/tools.json",
   "availability": "Hosted tool discovery and public menu, events and table reads verified 2026-11-02. Customer tools require explicitly consented OAuth scopes; actions require customer confirmation. This metadata is not a real-time health result.",
-  "checkedAt": "2026-11-02"
+  "checkedAt": "2026-11-04",
+  "toolCount": 15,
+  "toolSchemaReference": "https://ai.cyclist.cafe/mcp-tools.schema.json",
+  "checkoutPolicy": {
+    "linkTtlMinutes": 10,
+    "requiresSignIn": false,
+    "customerConfirmationRequired": true,
+    "payment": "cafe-counter",
+    "visibleInKitchenBeforePayment": true,
+    "preparationRequiresPayment": true,
+    "cancellation": "unconfirmed-or-unpaid-waiting-ticket",
+    "restart": "new-quote-required"
+  },
+  "release": {
+    "apiVersion": "1.2.0",
+    "status": "deployed-contracts-verified",
+    "changes": [
+      "10-minute private ticket links without repeat login",
+      "customer-page ticket cancellation and fresh-order restart",
+      "Not paid tickets in Kitchen Active; recorded payment required for acceptance/preparation"
+    ],
+    "checkedAt": "2026-11-04",
+    "verification": "Hosted tools/list and server instructions verified; customer end-to-end tests use isolated fixtures, not production SMS or orders."
+  }
 }

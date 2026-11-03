@@ -1,62 +1,218 @@
 [
   {
+    "name": "get_table_status",
+    "group": "tables",
+    "scope": null,
+    "description": "Check public current table occupancy and seat counts. No customer details, order IDs or reservations. Availability can change before arrival.",
+    "effect": "Read only",
+    "example": {},
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
     "name": "get_cafe_status",
     "group": "menu",
     "scope": null,
-    "description": "Opening hours, timezone and current fulfilment availability.",
+    "description": "Use this to check Cyclist Café opening hours, local timezone and whether dine-in or takeaway is currently available. Use authenticated checkout tools for customer-confirmed orders when enabled.",
     "effect": "Read only",
-    "example": {}
+    "example": {},
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "search_menu",
     "group": "menu",
     "scope": null,
-    "description": "Find products and active combos; filter by query, category, vegetarian tag or fulfilment.",
+    "description": "Primary tool for menu browsing and prices. One call returns matching products/combos, live availability, categories and café status. Default summaries are compact; use detail=full when modifier choices or full descriptions are requested, instead of fetching every result separately. Use a focused query/category and limit 5–10 for recommendations; omit query for a menu overview. Use availableOnly for currently orderable items. Base prices exclude checkout adjustments; dietary tags do not guarantee allergen safety.",
     "effect": "Read only",
     "example": {
       "query": "coffee",
       "fulfilment": "takeaway",
       "availableOnly": true,
       "limit": 10
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "fulfilment": {
+          "description": "Use takeaway to check item-specific takeaway restrictions.",
+          "type": "string",
+          "enum": [
+            "dine-in",
+            "takeaway"
+          ]
+        },
+        "availableOnly": {
+          "type": "boolean"
+        },
+        "vegetarian": {
+          "type": "boolean"
+        },
+        "includeCombos": {
+          "type": "boolean"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "detail": {
+          "default": "summary",
+          "description": "Summary returns names, prices, availability and hasOptions. Full also returns complete descriptions and modifier choices for all matching items in this page.",
+          "type": "string",
+          "enum": [
+            "summary",
+            "full"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "get_menu_item",
     "group": "menu",
     "scope": null,
-    "description": "Exact item or combo details, options, price and takeaway eligibility.",
+    "description": "Read full details for one selected item when its description or modifier choices are needed. Supply the ID and kind from search_menu. Search summaries already contain prices, availability and takeaway eligibility; do not call this for every search result just to repeat those fields. Never invent options or prices.",
     "effect": "Read only",
     "example": {
       "id": "PRODUCT_ID_FROM_SEARCH",
       "kind": "product",
       "fulfilment": "takeaway"
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        },
+        "kind": {
+          "default": "product",
+          "type": "string",
+          "enum": [
+            "product",
+            "combo"
+          ]
+        },
+        "fulfilment": {
+          "description": "Use takeaway to check item-specific takeaway restrictions.",
+          "type": "string",
+          "enum": [
+            "dine-in",
+            "takeaway"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "list_events",
     "group": "events",
     "scope": null,
-    "description": "Published upcoming events, category/date filters and current RSVP availability.",
+    "description": "Find published upcoming Cyclist Café events by query, category or ISO date range. Includes schema.org Event data, current seat availability and category names. Browsing never holds seats.",
     "effect": "Read only",
     "example": {
       "limit": 10
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "from": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "to": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "get_event",
     "group": "events",
     "scope": null,
-    "description": "A published event’s dates, location, status and schema.org Event data.",
+    "description": "Read a published event by its exact ID from list_events. Returns dates, location, status, availability and schema.org Event; no attendees.",
     "effect": "Read only",
     "example": {
       "eventId": "EVENT_ID_FROM_LIST"
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        }
+      },
+      "required": [
+        "eventId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "quote_order",
     "group": "orders",
     "scope": "orders:quote",
-    "description": "Price exact menu items and options; create a private expiring quote.",
+    "description": "Calculate an expiring INR bill using exact menu IDs, quantities, options and an optional saved coupon. Creates a private quote only: no order, stock reservation or payment. Required single-choice options must be selected explicitly. Takeaway only.",
     "effect": "Quote only · no order or stock hold",
     "example": {
       "fulfilment": "takeaway",
@@ -68,94 +224,301 @@
           "options": []
         }
       ]
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "fulfilment": {
+          "type": "string",
+          "const": "takeaway"
+        },
+        "items": {
+          "minItems": 1,
+          "maxItems": 30,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,160}$"
+              },
+              "kind": {
+                "default": "product",
+                "type": "string",
+                "enum": [
+                  "product",
+                  "combo"
+                ]
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
+              },
+              "options": {
+                "default": [],
+                "maxItems": 30,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "groupName": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "optionName": {
+                      "type": "string",
+                      "maxLength": 100
+                    }
+                  },
+                  "required": [
+                    "groupName",
+                    "optionName"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "notes": {
+                "default": "",
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "id",
+              "quantity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "couponCode": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "notes": {
+          "default": "",
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "fulfilment",
+        "items"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": false
   },
   {
     "name": "prepare_checkout",
     "group": "orders",
     "scope": "orders:checkout",
-    "description": "Create or reuse the trusted customer confirmation link for a quote.",
-    "effect": "Confirmation link · no order yet",
+    "description": "Prepare a unique ten-minute Cyclist ticket link for an owned quote and send it to the customer in chat. No sign-in is needed on the link. The customer must explicitly confirm or can cancel and start again. Confirmation creates one unpaid ticket visible in POS and Kitchen Active as Not paid. Payment at the café counter is required before Kitchen can accept or prepare it; Kitchen acceptance then confirms processing. This tool cannot place or pay for the order.",
+    "effect": "Private 10-minute ticket link · no order yet",
     "example": {
       "quoteId": "QUOTE_ID_FROM_QUOTE_ORDER"
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "quoteId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        }
+      },
+      "required": [
+        "quoteId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": false
   },
   {
     "name": "get_checkout_status",
     "group": "orders",
     "scope": "orders:read",
-    "description": "Read this connection’s checkout and any submitted order.",
+    "description": "Read this connection’s ticket status: awaiting_confirmation, submitted, cancelled or expired, with the owned order when present. Submitted means a ticket exists, not payment or Kitchen acceptance. Unpaid tickets are visible in Active but cannot be prepared. Cancelled tickets require a fresh quote/link. Does not create orders, cancel them or reconcile payment.",
     "effect": "Read only",
     "example": {
       "checkoutId": "CHECKOUT_ID_FROM_PREPARE_CHECKOUT"
-    }
-  },
-  {
-    "name": "get_my_order",
-    "group": "orders",
-    "scope": "orders:read",
-    "description": "Read your own recent order using exactly one of canonical orderId or explicit display orderNumber. Use list_my_orders to discover IDs; last seven days only.",
-    "effect": "Read only",
-    "example": {
-      "orderId": "ORDER_ID_FROM_SUBMITTED_CHECKOUT"
-    }
-  },
-  {
-    "name": "prepare_event_rsvp",
-    "group": "events",
-    "scope": "events:rsvp",
-    "description": "Prepare going, interested or cancellation for the registered customer.",
-    "effect": "Confirmation link · no seat held",
-    "example": {
-      "eventId": "EVENT_ID_FROM_LIST",
-      "response": "going",
-      "requestId": "550e8400-e29b-41d4-a716-446655440000"
-    }
-  },
-  {
-    "name": "get_event_rsvp_status",
-    "group": "events",
-    "scope": "events:read",
-    "description": "Read this connection’s RSVP confirmation request and current response.",
-    "effect": "Read only",
-    "example": {
-      "intentId": "INTENT_ID_FROM_PREPARE_EVENT_RSVP"
-    }
-  },
-  {
-    "name": "get_my_event_rsvps",
-    "group": "events",
-    "scope": "events:read",
-    "description": "Read only the connected customer’s own event reservations.",
-    "effect": "Read only",
-    "example": {
-      "limit": 10
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "checkoutId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        }
+      },
+      "required": [
+        "checkoutId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "list_my_orders",
     "group": "orders",
     "scope": "orders:read",
-    "description": "Discover your own orders from the last seven days, newest first. Defaults to 5; use limit 1 for latest, maximum 20. Follow opaque nextCursor; pass canonical orderId to get_my_order.",
+    "description": "Discover your own orders from the last seven days, newest first. Defaults to 5; limit 1 for my latest order, maximum 20. Follow opaque nextCursor for more. Use the returned canonical orderId with get_my_order for details. Requires explicit orders:read consent; no customer selectors.",
     "effect": "Read only",
     "example": {
       "limit": 5
-    }
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 2048
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "get_my_order",
+    "group": "orders",
+    "scope": "orders:read",
+    "description": "Read your own order from the last seven days. Supply exactly one: canonical orderId from list_my_orders/submitted checkout, or explicit display orderNumber. Never infer internal IDs from display numbers. No match never reveals another customer’s order.",
+    "effect": "Read only",
+    "example": {
+      "orderId": "ORDER_ID_FROM_SUBMITTED_CHECKOUT"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        },
+        "orderNumber": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
     "name": "get_my_rewards",
-    "group": "orders",
+    "group": "rewards",
     "scope": "rewards:read",
-    "description": "Your current reward-point balance and earning/redemption rules. Separate explicit consent; cannot redeem or change points.",
+    "description": "Read the connected customer’s current reward-point balance and published earning/redemption rules. Requires explicit rewards:read consent. Does not redeem points or disclose the customer profile or ledger.",
     "effect": "Read only",
-    "example": {}
+    "example": {},
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   },
   {
-    "name": "get_table_status",
-    "group": "menu",
-    "scope": null,
-    "description": "Current public table occupancy and seat counts. No guests, bill IDs or reservations. Availability can change before arrival.",
+    "name": "prepare_event_rsvp",
+    "group": "events",
+    "scope": "events:rsvp",
+    "description": "Prepare a customer confirmation link for going, interested or cancellation. Requires a registered People profile. No seat is reserved until the customer approves on the Cyclist page. Supply a new UUID requestId for each intended change; retry with the same UUID.",
+    "effect": "Confirmation link · no seat held",
+    "example": {
+      "eventId": "EVENT_ID_FROM_LIST",
+      "response": "going",
+      "requestId": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        },
+        "response": {
+          "type": "string",
+          "enum": [
+            "going",
+            "interested",
+            "cancelled"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "eventId",
+        "response",
+        "requestId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": false
+  },
+  {
+    "name": "get_event_rsvp_status",
+    "group": "events",
+    "scope": "events:read",
+    "description": "Read your own RSVP confirmation request and current reservation. Never claim attendance is confirmed while status is awaiting_confirmation.",
     "effect": "Read only",
-    "example": {}
+    "example": {
+      "intentId": "INTENT_ID_FROM_PREPARE_EVENT_RSVP"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        }
+      },
+      "required": [
+        "intentId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "get_my_event_rsvps",
+    "group": "events",
+    "scope": "events:read",
+    "description": "Read only your own event reservations; no attendee lists or other customer details.",
+    "effect": "Read only",
+    "example": {
+      "limit": 10
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
   }
 ]

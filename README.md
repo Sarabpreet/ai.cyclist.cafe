@@ -26,8 +26,9 @@ Both `dev` and `preview` build and serve `dist/` using Node's HTTP server. Re-ru
 - `src/index.html`: complete readable guide, including current client instructions and local/live readiness caveat.
 - `src/styles.css`: responsive café branding, print rules and reduced-motion support.
 - `src/app.js`: keyboard-accessible tabs, guide search, copy controls, screenshot dialog and tool filters.
-- `src/tools.json`: the 12 documented tools, scopes and executable request shapes. The build renders the tool table into HTML; reading it does not require JavaScript.
-- `public/llms.txt`: agent-readable workflow and confirmation rules.
+- `src/tools.json`: the 15 documented tools, scopes and executable request shapes. The build renders the tool table into HTML; reading it does not require JavaScript.
+- `public/llms.txt`: agent-readable workflow, authentication, ticket cancellation and payment rules.
+- `public/mcp-tools.schema.json`: actual local SDK tools/list schema snapshot; source version and rollout caveats included.
 - `public/cyclist-mcp.json`: non-secret connection metadata. This is documentation, not an MCP discovery standard or import configuration for a specific AI client.
 - `public/screenshots/`: actual local test captures and provenance. All visible identities/orders are fictional fixtures.
 - `public/_headers`: Cloudflare security headers; no remote scripts, frames or API calls are needed.
@@ -117,3 +118,5 @@ The repository and previous public versions already contain the training source.
 ## Recent orders, rewards and table status additions
 
 The guide now documents `list_my_orders`, explicit `orderNumber` lookup in `get_my_order`, `get_my_rewards` and public `get_table_status`. These require the corresponding API release; documentation publication does not activate them. Recent orders use orders:read, a rolling seven-day limit, 5 results by default (1–20), customer/grant-scoped opaque pagination, and canonical IDs for follow-up details. Reward reads require new rewards:read consent. Table snapshots need the public tool enabled in Setup and never reserve seats. Refresh tool discovery after the API release, then re-consent only needed permissions. Existing quote/checkout and RSVP confirmations remain mandatory.
+
+The 10-minute private ticket-link flow is present in the deployed API/POS; all 15 tools and server version 1.2.0 were verified through hosted discovery on 4 November 2026. Production SMS and customer order/RSVP journeys were not exercised by that check. Keep guide, llms.txt, connection metadata, tool examples, Setup tool catalog and API registration aligned. Order links allow review/confirm/cancel without repeat login; event RSVP links still require a signed-in customer. Only recorded counter payment permits Kitchen acceptance/preparation. No confirm/cancel/payment tool is exposed to the assistant.

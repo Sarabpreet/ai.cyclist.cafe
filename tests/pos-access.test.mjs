@@ -25,6 +25,9 @@ test('Incorrect password, localStorage-style flags, forged and expired cookies a
  for(const Cookie of ['haspassword=true','__Secure-cyclist_pos_access=true','__Secure-cyclist_pos_access=v1.9999999999.'+'A'.repeat(43)])assert.equal((await get('/ppt/pos/deck-data.js',{Cookie})).status,401);
  const valid=(await login()).split(';')[0],forged=valid.slice(0,-1)+(valid.endsWith('A')?'B':'A');
  assert.equal((await get('/ppt/pos/deck-data.js',{Cookie:forged})).status,401);
+ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',alias=valid.slice(0,-1)+alphabet[alphabet.indexOf(valid.at(-1))^1];
+ assert.equal((await get('/ppt/pos/deck-data.js',{Cookie:alias})).status,401,'Reject noncanonical base64url signature aliases');
+ assert.equal((await get('/ppt/pos/deck-data.js',{Cookie:valid})).status,200,'Original canonical cookie remains valid');
  const futureDate=Date.now()+91*86400000,realNow=Date.now;Date.now=()=>futureDate;
  try{assert.equal((await get('/ppt/pos/deck-data.js',{Cookie:valid})).status,401);}finally{Date.now=realNow;}
 });
