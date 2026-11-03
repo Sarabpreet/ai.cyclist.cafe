@@ -133,6 +133,6 @@ test('Ticket links, cancellation, payment gating and RSVP authentication are dis
  assert.equal(metadata.toolCount,15);assert.equal(metadata.release.status,'deployed-contracts-verified');
  for(const text of ['#ticket=','No repeat login','Not paid','cancel','fresh quote','No production orders','RSVP links'])assert(llms.includes(text),text);
  for(const tool of ['confirm_order','cancel_order','pay_order','confirm_ticket','cancel_ticket'])assert(!tools.some(row=>row.name===tool),'A browser-only action was advertised as an MCP tool');
- assert(html.includes('Live MCP discovery reports all 15 tools'));assert(html.includes('RSVP links also last ten minutes'));assert(html.includes('without signing in again'));assert(html.includes('No repeat login'));
+ assert(html.includes('Live MCP discovery reports all 15 tools'));assert(!/not yet deployed|awaiting API\/POS deployment|pending deployment/i.test(html),'The published guide must not contradict verified deployed status');assert(html.includes('RSVP links also last ten minutes'));assert(html.includes('without signing in again'));assert(html.includes('No repeat login'));
  const deck=await readFile(path.join(root,'dist/ppt/ai/index.html'),'utf8');assert(deck.includes('Not paid'));assert(deck.includes('Hosted discovery verified'));assert(!deck.includes('Verify your identity and approve the exact order.'));
 });
