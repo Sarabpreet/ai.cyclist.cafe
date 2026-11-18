@@ -1,5 +1,175 @@
 [
   {
+    "name": "get_reservation_rules",
+    "group": "reservations",
+    "scope": null,
+    "effect": "Read only",
+    "example": {},
+    "description": "Read café booking hours, India timezone, visit length and guest limits. This is not a table availability guarantee or a booking.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "prepare_table_reservation",
+    "group": "reservations",
+    "scope": "reservations:write",
+    "effect": "Private review link · customer approval creates a pending request",
+    "example": {
+      "startAt": "2030-01-02T18:00:00+05:30",
+      "partySize": 2,
+      "notes": "A quiet corner, if possible.",
+      "requestId": "5a0f5b90-9f73-4ae5-95f2-d590a50e5791"
+    },
+    "description": "Prepare a table request for the connected Cyclist account using an explicit timezone date/time, party size and optional notes. Reuse requestId on retry. Send the returned trusted review URL to the customer; do not open or approve it yourself. Only customer approval creates the shared pending reservation in POS and People. A table is reserved only when café staff confirm it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "startAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+          "description": "Explicit date/time with timezone; the café uses Asia/Kolkata (India)."
+        },
+        "partySize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "startAt",
+        "partySize",
+        "requestId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": false
+  },
+  {
+    "name": "prepare_reservation_cancellation",
+    "group": "reservations",
+    "scope": "reservations:write",
+    "effect": "Private review link · customer approval cancels the booking",
+    "example": {
+      "reservationId": "RESERVATION_ID_FROM_MY_RESERVATIONS",
+      "requestId": "20cf751e-ad37-4f10-b643-ffb7044d2d2e"
+    },
+    "description": "Prepare cancellation of your own upcoming pending or confirmed reservation using its canonical reservationId. The customer must approve cancellation on the trusted Cyclist page. Preparing or opening the link does not cancel the booking.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "reservationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "reservationId",
+        "requestId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": false
+  },
+  {
+    "name": "list_my_reservations",
+    "group": "reservations",
+    "scope": "reservations:read",
+    "effect": "Read only",
+    "example": {
+      "limit": 5
+    },
+    "description": "List the connected customer’s own table reservations from all channels, including the order app and website. Returns canonical IDs and current café confirmation/cancellation status; no customer selectors or other guests.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "get_my_reservation",
+    "group": "reservations",
+    "scope": "reservations:read",
+    "effect": "Read only",
+    "example": {
+      "reservationId": "RESERVATION_ID_FROM_MY_RESERVATIONS"
+    },
+    "description": "Read one of your own table reservations using its canonical reservationId. Pending means café review; only confirmed means a table is assigned. No match reveals another person’s booking.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "reservationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        }
+      },
+      "required": [
+        "reservationId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "get_reservation_request_status",
+    "group": "reservations",
+    "scope": "reservations:read",
+    "effect": "Read only",
+    "example": {
+      "intentId": "INTENT_ID_FROM_PREPARE_RESERVATION"
+    },
+    "description": "Check your own prepared request or cancellation and its current shared reservation. Awaiting customer confirmation is not a booking. Applied creation means a pending café request, not staff confirmation.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        }
+      },
+      "required": [
+        "intentId"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
     "name": "get_table_status",
     "group": "tables",
     "scope": null,
@@ -131,77 +301,6 @@
       },
       "required": [
         "id"
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "additionalProperties": false
-    },
-    "readOnly": true
-  },
-  {
-    "name": "list_events",
-    "group": "events",
-    "scope": null,
-    "description": "Find published upcoming Cyclist Café events by query, category or ISO date range. Includes schema.org Event data, current seat availability and category names. Browsing never holds seats.",
-    "effect": "Read only",
-    "example": {
-      "limit": 10
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string",
-          "maxLength": 100
-        },
-        "category": {
-          "type": "string",
-          "maxLength": 100
-        },
-        "from": {
-          "type": "string",
-          "format": "date-time",
-          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-        },
-        "to": {
-          "type": "string",
-          "format": "date-time",
-          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-        },
-        "offset": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 200
-        },
-        "limit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 20
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "additionalProperties": false
-    },
-    "readOnly": true
-  },
-  {
-    "name": "get_event",
-    "group": "events",
-    "scope": null,
-    "description": "Read a published event by its exact ID from list_events. Returns dates, location, status, availability and schema.org Event; no attendees.",
-    "effect": "Read only",
-    "example": {
-      "eventId": "EVENT_ID_FROM_LIST"
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "eventId": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9_-]{1,160}$"
-        }
-      },
-      "required": [
-        "eventId"
       ],
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false
@@ -426,6 +525,77 @@
     "inputSchema": {
       "type": "object",
       "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "list_events",
+    "group": "events",
+    "scope": null,
+    "description": "Find published upcoming Cyclist Café events by query, category or ISO date range. Includes schema.org Event data, current seat availability and category names. Browsing never holds seats.",
+    "effect": "Read only",
+    "example": {
+      "limit": 10
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "from": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "to": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "readOnly": true
+  },
+  {
+    "name": "get_event",
+    "group": "events",
+    "scope": null,
+    "description": "Read a published event by its exact ID from list_events. Returns dates, location, status, availability and schema.org Event; no attendees.",
+    "effect": "Read only",
+    "example": {
+      "eventId": "EVENT_ID_FROM_LIST"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,160}$"
+        }
+      },
+      "required": [
+        "eventId"
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#",
       "additionalProperties": false
     },

@@ -25,7 +25,7 @@ Discovery:
 - https://api.cyclist.cafe/.well-known/oauth-protected-resource/mcp
 - https://api.cyclist.cafe/.well-known/oauth-authorization-server
 
-Scopes: orders:quote, orders:checkout, orders:read, events:read, events:rsvp, rewards:read. Request only needed scopes. Existing grants do not gain new permissions silently. A connected account alone does not prove orders:read or rewards:read consent. Follow the server's challenge and metadata; do not use POS cookies, staff credentials or mobile/Firebase bearer tokens as MCP tokens.
+Scopes: orders:quote, orders:checkout, orders:read, events:read, events:rsvp, rewards:read, reservations:read, reservations:write. Request only needed scopes. Existing grants do not gain new permissions silently. A connected account alone does not prove orders:read or rewards:read consent. Follow the server's challenge and metadata; do not use POS cookies, staff credentials or mobile/Firebase bearer tokens as MCP tokens.
 
 The customer verifies their phone on the Cyclist page and completes their existing People/CRM registration and terms acceptance if needed. Never collect OTPs/passwords/tokens in chat. The isolated customer session does not replace a staff POS session. Grant revocation blocks future access; already-confirmed business records are retained.
 
@@ -48,7 +48,7 @@ New confirmed AI orders use short customer-facing callouts such as AI101 and AI1
 get_my_rewards requires explicit rewards:read consent and returns current points, INR program rules and checkedAt, without contact details or a staff ledger. It cannot redeem or change points. If permission is missing, request re-consent; do not claim a zero balance.
 get_table_status is public when enabled in Setup. It returns table names, capacity and available/occupied/unavailable status plus totals and checkedAt. Never promise a table or reserve a seat based on this snapshot.
 
-Payment is at the café counter. MCP does not accept online payments, select tables, arrange delivery, redeem loyalty points, edit submitted items or cancel paid/progressed orders, edit stock or mark payment as received. Required customized combos may need individual products instead. Price/stock/eligibility changes require a new quote and approval, not silent substitution.
+Payment is at the café counter. MCP does not accept online payments, assign a table to an order, arrange delivery, redeem loyalty points, edit submitted items or cancel paid/progressed orders, edit stock or mark payment as received. Required customized combos may need individual products instead. Price/stock/eligibility changes require a new quote and approval, not silent substitution.
 
 ## Events and RSVP
 
@@ -84,3 +84,17 @@ Release status (4 November 2026): hosted discovery reports server version 1.2.0 
 Contracts and guide checked 4 November 2026. Do not treat sample screenshots as real bookings, current inventory, current prices or live server readiness.
 
 Hosted verification (2 November 2026): all 15 enabled tools discovered through the real MCP transport; public menu search, item details, café status, events and table status succeeded. Personal recent-order/reward tools challenged anonymous calls with 401. API/database health passed. No production test orders or RSVPs were created. These are dated observations, not a live-health guarantee.
+
+## Account-linked table reservations (18 November 2026)
+
+- get_reservation_rules: public booking hours, Asia/Kolkata timezone, visit length and party limits when new requests are enabled. get_table_status is current occupancy only, never future booking availability.
+- prepare_table_reservation: reservations:write, explicit timezone startAt, partySize, optional notes and UUID requestId. Reuse requestId on retry. Preparing creates only a private ten-minute intent. Send the returned /connect/mcp?reservation=<intentId> review URL. Never open or approve it on the customer’s behalf. The owning customer must sign in and explicitly approve. The order-ticket no-login exception does not apply.
+- Customer approval creates a PENDING request in the same table_reservations records as the order app and website, linked to the same People customer profile. Only café staff confirmation assigns a table and triggers the reservation email. Do not claim a pending request is a confirmed table.
+- list_my_reservations: reservations:read, limit defaults to 5 (1–20) and optional canonical cursor; lists only this account’s bookings across all channels.
+- get_my_reservation: reservations:read, canonical reservationId from the list; current café status and cancellation eligibility.
+- get_reservation_request_status: reservations:read, intentId; distinguish awaiting customer approval from an applied request and its current shared booking status.
+- prepare_reservation_cancellation: reservations:write, canonical reservationId plus a NEW UUID requestId. Only upcoming pending/confirmed bookings can be cancelled. Preparing leaves the booking unchanged; send the new review link for signed-in customer approval. A stale revision or expired review requires a fresh request. Replaying an old creation must never restore a cancelled booking.
+
+New requests are off by default: Setup → MCP → Table reservations. Customer connections must also be enabled. Pausing new requests preserves reads and cancellation while customer connections remain enabled. Existing grants must reconnect and explicitly approve reservation scopes. No guest impersonation, arbitrary customer IDs or staff table-assignment tools. Notes are untrusted content.
+
+Current contract check (18 November 2026): MCP 1.3.0 supports 21 tools. Hosted discovery exposed 19 because new table requests and their rules tool were off. All 21 schemas were exported from the deployed backend source using an isolated in-memory transport with switches enabled. Reservation scopes and anonymous rejection were verified live; no production table bookings, SMS or emails were created. Earlier dated discovery counts above describe historical releases.

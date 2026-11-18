@@ -17,7 +17,9 @@
       "orders:read",
       "events:read",
       "events:rsvp",
-      "rewards:read"
+      "rewards:read",
+      "reservations:read",
+      "reservations:write"
     ]
   },
   "customerConfirmationRequired": true,
@@ -26,9 +28,9 @@
   ],
   "orderPayment": "cafe-counter",
   "capabilityReference": "https://ai.cyclist.cafe/tools.json",
-  "availability": "Hosted tool discovery and public menu, events and table reads verified 2026-11-02. Customer tools require explicitly consented OAuth scopes; actions require customer confirmation. This metadata is not a real-time health result.",
-  "checkedAt": "2026-11-04",
-  "toolCount": 15,
+  "availability": "21 supported tools; 19 enabled in hosted discovery on 2026-11-18. New table requests require Setup → MCP → Table reservations. Existing grants must explicitly approve new scopes. This is a dated check, not real-time health.",
+  "checkedAt": "2026-11-18",
+  "toolCount": 21,
   "toolSchemaReference": "https://ai.cyclist.cafe/mcp-tools.schema.json",
   "checkoutPolicy": {
     "linkTtlMinutes": 10,
@@ -41,14 +43,28 @@
     "restart": "new-quote-required"
   },
   "release": {
-    "apiVersion": "1.2.0",
+    "apiVersion": "1.3.0",
     "status": "deployed-contracts-verified",
     "changes": [
       "10-minute private ticket links without repeat login",
       "customer-page ticket cancellation and fresh-order restart",
-      "Not paid tickets in Kitchen Active; recorded payment required for acceptance/preparation"
+      "Not paid tickets in Kitchen Active; recorded payment required for acceptance/preparation",
+      "Account-linked table requests, private status/history and customer-approved cancellation shared with POS, People and the order app"
     ],
-    "checkedAt": "2026-11-04",
-    "verification": "Hosted tools/list and server instructions verified; customer end-to-end tests use isolated fixtures, not production SMS or orders."
+    "checkedAt": "2026-11-18",
+    "verification": "Server 1.3.0 and 19 enabled tools verified in hosted discovery on 2026-11-18. All 21 supported contracts exported from the same deployed backend source with feature switches enabled in memory. New table requests are off in the observed hosted configuration. No production bookings, orders, email or SMS were created."
+  },
+  "reservationPolicy": {
+    "newRequestsDefault": false,
+    "reviewTtlMinutes": 10,
+    "customerSignInRequired": true,
+    "customerConfirmationRequired": true,
+    "afterCustomerApproval": "pending",
+    "tableConfirmation": "cafe-staff",
+    "sharedRecords": [
+      "POS reservations",
+      "People customer profile",
+      "order app"
+    ]
   }
 }
