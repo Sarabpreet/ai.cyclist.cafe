@@ -1,8 +1,8 @@
 {
   "source": "Actual local MCP SDK tools/list; use live tools/list for deployed configuration and current limits.",
-  "apiVersion": "1.2.0",
+  "apiVersion": "1.3.0",
   "referenceSearchLimit": 20,
-  "deploymentStatus": "Server 1.2.0 and all 15 tools verified in hosted discovery on 2026-11-04. Customer flow tests use isolated fixtures; this is not a production SMS/order end-to-end verification.",
+  "deploymentStatus": "Server 1.3.0 and 19 enabled tools verified in hosted discovery on 2026-11-18. All 21 supported contracts exported from the same deployed backend source with feature switches enabled in memory. New table requests are off in the observed hosted configuration. No production bookings, orders, email or SMS were created.",
   "checkoutPolicy": {
     "linkTtlMinutes": 10,
     "requiresSignIn": false,
@@ -14,6 +14,249 @@
     "restart": "new-quote-required"
   },
   "tools": [
+    {
+      "name": "get_reservation_rules",
+      "title": "Table reservation rules",
+      "description": "Read café booking hours, India timezone, visit length and guest limits. This is not a table availability guarantee or a booking.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "prepare_table_reservation",
+      "title": "Request a café table",
+      "description": "Prepare a table request for the connected Cyclist account using an explicit timezone date/time, party size and optional notes. Reuse requestId on retry. Send the returned trusted review URL to the customer; do not open or approve it yourself. Only customer approval creates the shared pending reservation in POS and People. A table is reserved only when café staff confirm it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "startAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "description": "Explicit date/time with timezone; the café uses Asia/Kolkata (India)."
+          },
+          "partySize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "startAt",
+          "partySize",
+          "requestId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "reservations:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "prepare_reservation_cancellation",
+      "title": "Cancel my table reservation",
+      "description": "Prepare cancellation of your own upcoming pending or confirmed reservation using its canonical reservationId. The customer must approve cancellation on the trusted Cyclist page. Preparing or opening the link does not cancel the booking.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "reservationId",
+          "requestId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "reservations:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "list_my_reservations",
+      "title": "My table reservations",
+      "description": "List the connected customer’s own table reservations from all channels, including the order app and website. Returns canonical IDs and current café confirmation/cancellation status; no customer selectors or other guests.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "reservations:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_my_reservation",
+      "title": "My table reservation status",
+      "description": "Read one of your own table reservations using its canonical reservationId. Pending means café review; only confirmed means a table is assigned. No match reveals another person’s booking.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        },
+        "required": [
+          "reservationId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "reservations:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_reservation_request_status",
+      "title": "Customer approval status for a table request",
+      "description": "Check your own prepared request or cancellation and its current shared reservation. Awaiting customer confirmation is not a booking. Applied creation means a pending café request, not staff confirmation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "intentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        },
+        "required": [
+          "intentId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "reservations:read"
+            ]
+          }
+        ]
+      }
+    },
     {
       "name": "get_table_status",
       "title": "Table availability",
@@ -704,5 +947,18 @@
         ]
       }
     }
-  ]
+  ],
+  "reservationPolicy": {
+    "newRequestsDefault": false,
+    "reviewTtlMinutes": 10,
+    "customerSignInRequired": true,
+    "customerConfirmationRequired": true,
+    "afterCustomerApproval": "pending",
+    "tableConfirmation": "cafe-staff",
+    "sharedRecords": [
+      "POS reservations",
+      "People customer profile",
+      "order app"
+    ]
+  }
 }

@@ -7,12 +7,12 @@ import path from 'node:path';
 const root=fileURLToPath(new URL('..',import.meta.url));
 execFileSync(process.execPath,['scripts/build.mjs'],{cwd:root});
 const html=await readFile(path.join(root,'dist/index.html'),'utf8'),tools=JSON.parse(await readFile(path.join(root,'dist/tools.json'),'utf8'));
-const expected=['get_cafe_status','search_menu','get_menu_item','list_events','get_event','quote_order','prepare_checkout','get_checkout_status','get_my_order','prepare_event_rsvp','get_event_rsvp_status','get_my_event_rsvps','list_my_orders','get_my_rewards','get_table_status'];
+const expected=['get_cafe_status','search_menu','get_menu_item','list_events','get_event','quote_order','prepare_checkout','get_checkout_status','get_my_order','prepare_event_rsvp','get_event_rsvp_status','get_my_event_rsvps','list_my_orders','get_my_rewards','get_table_status','get_reservation_rules','prepare_table_reservation','prepare_reservation_cancellation','list_my_reservations','get_my_reservation','get_reservation_request_status'];
 
-test('All 15 documented contracts are rendered statically and examples use real schema field names',()=>{
- assert.deepEqual(tools.map(tool=>tool.name).sort(),expected.sort());assert.equal(new Set(tools.map(tool=>tool.name)).size,15);
+test('All 21 documented contracts are rendered statically and examples use real schema field names',()=>{
+ assert.deepEqual(tools.map(tool=>tool.name).sort(),expected.sort());assert.equal(new Set(tools.map(tool=>tool.name)).size,21);
  for(const tool of tools){assert(html.includes(`<code>${tool.name}</code>`));assert(tool.example&&typeof tool.example==='object');assert(!['customerId','price','isPaid','paymentMethod'].some(key=>key in tool.example));}
- assert.equal(tools.filter(tool=>tool.scope===null).length,6);
+ assert.equal(tools.filter(tool=>tool.scope===null).length,7);
  assert.equal(tools.find(tool=>tool.name==='quote_order').example.fulfilment,'takeaway');
  assert.match(tools.find(tool=>tool.name==='prepare_event_rsvp').example.requestId,/^[a-f0-9-]{36}$/);
  assert(!html.includes('<!-- TOOL_ROWS -->'));
@@ -124,15 +124,26 @@ test('Actual SDK schema snapshot, human examples, scopes and all selector option
   for(const field of actual.inputSchema.required||[])assert(field in tool.example,tool.name+' example omits required '+field);
   assert(html.includes('<option value="'+tool.name+'">'+tool.name+'</option>'),'Example selector missing '+tool.name);
  }
- assert(html.includes('All tools <span>15</span>'));assert(!html.includes('<!-- TOOL_COUNT -->'));assert(!html.includes('<!-- TOOL_OPTIONS -->'));
+ assert(html.includes('All tools <span>21</span>'));assert(!html.includes('<!-- TOOL_COUNT -->'));assert(!html.includes('<!-- TOOL_OPTIONS -->'));
  assert.equal(tools.find(row=>row.name==='search_menu').inputSchema.properties.detail.default,'summary');
  assert.equal(snapshot.checkoutPolicy.linkTtlMinutes,10);assert.equal(snapshot.checkoutPolicy.requiresSignIn,false);assert.equal(snapshot.checkoutPolicy.preparationRequiresPayment,true);
 });
 test('Ticket links, cancellation, payment gating and RSVP authentication are distinguished with accurate deployment verification limits',async()=>{
  const llms=await readFile(path.join(root,'dist/llms.txt'),'utf8'),metadata=JSON.parse(await readFile(path.join(root,'dist/cyclist-mcp.json'),'utf8'));
- assert.equal(metadata.toolCount,15);assert.equal(metadata.release.status,'deployed-contracts-verified');
+ assert.equal(metadata.toolCount,21);assert.equal(metadata.release.status,'deployed-contracts-verified');
  for(const text of ['#ticket=','No repeat login','Not paid','cancel','fresh quote','No production orders','RSVP links'])assert(llms.includes(text),text);
  for(const tool of ['confirm_order','cancel_order','pay_order','confirm_ticket','cancel_ticket'])assert(!tools.some(row=>row.name===tool),'A browser-only action was advertised as an MCP tool');
- assert(html.includes('Live MCP discovery reports all 15 tools'));assert(!/not yet deployed|awaiting API\/POS deployment|pending deployment/i.test(html),'The published guide must not contradict verified deployed status');assert(html.includes('RSVP links also last ten minutes'));assert(html.includes('without signing in again'));assert(html.includes('No repeat login'));
+ assert(html.includes('Live MCP discovery reports 19 enabled tools'));assert(!/not yet deployed|awaiting API\/POS deployment|pending deployment/i.test(html),'The published guide must not contradict verified deployed status');assert(html.includes('RSVP links also last ten minutes'));assert(html.includes('without signing in again'));assert(html.includes('No repeat login'));
  const deck=await readFile(path.join(root,'dist/ppt/ai/index.html'),'utf8');assert(deck.includes('Not paid'));assert(deck.includes('Hosted discovery verified'));assert(!deck.includes('Verify your identity and approve the exact order.'));
+});
+
+test('Reservation actions document all six contracts, consent and staff confirmation accurately',async()=>{
+ const metadata=JSON.parse(await readFile(path.join(root,'dist/cyclist-mcp.json'),'utf8'));
+ assert.equal(tools.filter(t=>t.group==='reservations').length,6);
+ for(const scope of ['reservations:read','reservations:write'])assert(metadata.authentication.scopes.includes(scope));
+ assert.equal(metadata.reservationPolicy.newRequestsDefault,false);
+ assert.equal(metadata.reservationPolicy.customerSignInRequired,true);
+ assert.equal(metadata.reservationPolicy.afterCustomerApproval,'pending');
+ for(const fragment of ['id="actions"','id="reservations"','data-tool-filter="reservations"','Only staff confirmation assigns a table','Pausing new requests preserves tracking'])assert(html.includes(fragment),fragment);
+ const create=tools.find(t=>t.name==='prepare_table_reservation');assert.equal(create.readOnly,false);assert.equal(create.inputSchema.additionalProperties,false);assert(!('customerId' in create.inputSchema.properties));
 });
